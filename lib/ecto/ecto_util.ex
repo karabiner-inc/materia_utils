@@ -1,4 +1,4 @@
-defmodule AppEx.Utils.EctoUtil do
+defmodule AppExUtils.Ecto.EctoUtil do
   @moduledoc """
   Ecto関連の操作機能
   """
