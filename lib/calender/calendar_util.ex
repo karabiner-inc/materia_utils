@@ -19,6 +19,12 @@ defmodule AppExUtils.Calendar.CalendarUtil do
     Timex.now
   end
 
+  def ecto_datetime_now() do
+    {:ok, now_datetime } = now()
+    |> Timex.format!("%FT%T", :strftime)
+    |> Ecto.DateTime.cast()
+  end
+
   def convert_time_utc2local(nil) do
     #Timexはnilを渡すとハングするのでスルーさせる
     nil
