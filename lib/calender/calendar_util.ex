@@ -23,6 +23,7 @@ defmodule AppExUtils.Calendar.CalendarUtil do
     {:ok, now_datetime } = now()
     |> Timex.format!("%FT%T", :strftime)
     |> Ecto.DateTime.cast()
+    now_datetime
   end
 
   def convert_time_utc2local(nil) do
