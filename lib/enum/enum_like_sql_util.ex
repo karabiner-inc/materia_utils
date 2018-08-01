@@ -38,8 +38,8 @@ defmodule AppExUtils.Enum.EnumLikeSqlUtil do
   end
 
 # [
-#  %{all_count: 1, picking_date: 0, picking_id: 3, status: 1},
-#  %{all_count: 1, picking_date: 0, picking_id: 4, status: 1}
+#  {%{"item_id" => 1}, %{all_count: 1, picking_date: 0, picking_id: 3, status: 1}},
+#  {%{"item_id" => 2}, %{all_count: 1, picking_date: 0, picking_id: 3, status: 1}}
 # ]
 # %{all_count: group_by_resultsのkey毎の総件数
 def count(group_by_results, count_key_list \\ []) do
@@ -48,7 +48,7 @@ def count(group_by_results, count_key_list \\ []) do
   initial_result = count_key_list
   |> Enum.reduce(%{}, fn(key, initial_result) -> Map.put(initial_result, key, 0) end)
 
-  sum_result_maps = group_by_results
+  count_result_maps = group_by_results
   |> Enum.map(fn(group_by_result) ->
     {group_by_keys_map, maps} = group_by_result
     # 件数をカウント
@@ -59,14 +59,17 @@ def count(group_by_results, count_key_list \\ []) do
     count_map = %{all_count: all_count}
 
     # 指定カラムのnot nullの件数（SQL仕様）
-    count_map = count_key_list
+    col_count_map = count_key_list
     |> Enum.reduce(count_map, fn(count_key, count_map) ->
       col_count = maps
       |> Enum.count(fn(map) -> map[count_key] != nil end)
       Map.put(count_map, count_key, col_count)
     end)
 
-    Map.merge(group_by_keys_map, count_map)
+    count_map = count_map
+    |> Map.merge(col_count_map)
+
+    {group_by_keys_map, count_map}
 
   end)
 
