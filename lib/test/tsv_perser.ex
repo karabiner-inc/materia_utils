@@ -1,6 +1,6 @@
 defmodule AppExUtils.Perser.TsvPerser do
 
-  def parse_tsv_to_json(tsv) do
+  def parse_tsv_to_json(tsv, header_key) do
     rows = tsv
     |> String.split("\n")
     |> Enum.reject(fn(row) ->
@@ -19,7 +19,7 @@ defmodule AppExUtils.Perser.TsvPerser do
       {columns, index} = with_index
       columns
       |> Enum.any?(fn(column) ->
-        column == "inserted_at"
+        column == header_key
       end)
     end)
 

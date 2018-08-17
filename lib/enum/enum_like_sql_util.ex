@@ -38,8 +38,8 @@ defmodule AppExUtils.Enum.EnumLikeSqlUtil do
   end
 
 # [
-#  {%{"item_id" => 1}, %{all_count: 1, picking_date: 0, picking_id: 3, status: 1}},
-#  {%{"item_id" => 2}, %{all_count: 1, picking_date: 0, picking_id: 3, status: 1}}
+#  {%{"item_id" => 1}, %{all_count: 1, picked_date: 0, picking_id: 3, status: 1}},
+#  {%{"item_id" => 2}, %{all_count: 1, picked_date: 0, picking_id: 3, status: 1}}
 # ]
 # %{all_count: group_by_resultsのkey毎の総件数
 def count(group_by_results, count_key_list \\ []) do
