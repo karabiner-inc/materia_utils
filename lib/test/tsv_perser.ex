@@ -7,11 +7,15 @@ defmodule AppExUtils.Perser.TsvPerser do
       Regex.match?(~r/^\s*$/,row)
     end)
 
+    #IO.puts("rows:#{inspect(rows)}")
+
     tables = rows
     |> Enum.map(fn(row) ->
       row
       |> String.split("\t")
     end)
+
+    #IO.puts("tables:#{inspect(tables)}")
 
     [{header, header_index}] = tables
     |> Enum.with_index()
@@ -30,15 +34,19 @@ defmodule AppExUtils.Perser.TsvPerser do
     |> Enum.map(fn(data_row) ->
       data_row = data_row
       |> Enum.map(fn(column) ->
+        #IO.puts("column:#{inspect(column)}")
         cond do
-          Regex.match?(~r/[NULL]/, column) ->
+          Regex.match?(~r/NULL/, column) ->
+            #IO.puts("match nil !")
             nil
           true ->
             column
         end
       end)
-      Enum.zip(header, data_row)
+      map = Enum.zip(header, data_row)
       |> Enum.into(%{})
+      #IO.puts("map:#{inspect(map)}")
+      map
     end)
   end
 end
