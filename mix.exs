@@ -4,7 +4,7 @@ defmodule ServicexUtils.MixProject do
   def project do
     [
       app: :servicex_utils,
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.6",
       description: "This library is a utilities for service development based on Servicex.",
       start_permanent: Mix.env() == :prod,

@@ -44,4 +44,31 @@ defmodule ServicexUtils.Calendar.CalendarUtil do
     Timezone.convert(datetime,@time_zone_utc)
   end
 
+  def perse_datetime_strftime(attr, key_list) when is_map(attr) and is_list(key_list) do
+    converted_attr = key_list
+    |> Enum.reduce(attr, fn(key, attr) ->
+        attr =
+        if Map.has_key?(attr, key) and attr[key] != nil do
+          {:ok, date_time} = Timex.parse(attr[key],"%Y-%m-%d %H:%M:%S%:z", :strftime)
+          Map.put(attr, key, date_time)
+        else
+          attr
+        end
+    end)
+    converted_attr
+  end
+
+  def convert_time_local2utc(attr, key_list) when is_map(attr) and is_list(key_list) do
+    converted_attr = key_list
+    |> Enum.reduce(attr, fn(key, attr) ->
+        attr =
+        if Map.has_key?(attr, key) and attr[key] != nil do
+          Map.put(attr, key, Timex.Timezone.convert(attr[key], "Etc/UTC"))
+        else
+          attr
+        end
+    end)
+    converted_attr
+  end
+
 end
