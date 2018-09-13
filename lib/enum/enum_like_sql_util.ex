@@ -1,4 +1,4 @@
-defmodule AppExUtils.Enum.EnumLikeSqlUtil do
+defmodule ServicexUtils.Enum.EnumLikeSqlUtil do
 
   def group_by(maps, group_by_key_list) do
 

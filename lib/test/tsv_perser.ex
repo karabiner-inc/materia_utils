@@ -1,4 +1,4 @@
-defmodule AppExUtils.Perser.TsvPerser do
+defmodule ServicexUtils.Perser.TsvPerser do
 
   def parse_tsv_to_json(tsv, header_key) do
     rows = tsv

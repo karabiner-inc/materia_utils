@@ -1,6 +1,6 @@
-defmodule AppExUtils do
+defmodule ServicexUtils do
   @moduledoc """
-  Documentation for AppExUtils.
+  Documentation for ServicexUtils.
   """
 
   @doc """
@@ -8,7 +8,7 @@ defmodule AppExUtils do
 
   ## Examples
 
-      iex> AppExUtils.hello
+      iex> ServicexUtils.hello
       :world
 
   """

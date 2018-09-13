@@ -1,8 +1,8 @@
-defmodule AppExUtilsTest do
+defmodule ServicexUtilsTest do
   use ExUnit.Case
-  doctest AppExUtils
+  doctest ServicexUtils
 
   test "greets the world" do
-    assert AppExUtils.hello() == :world
+    assert ServicexUtils.hello() == :world
   end
 end

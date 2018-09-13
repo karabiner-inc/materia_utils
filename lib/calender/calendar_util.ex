@@ -1,4 +1,4 @@
-defmodule AppExUtils.Calendar.CalendarUtil do
+defmodule ServicexUtils.Calendar.CalendarUtil do
   @moduledoc """
   日付関連の操作機能
   """
