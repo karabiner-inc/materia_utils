@@ -3,7 +3,7 @@ defmodule ServicexUtils.Calendar.CalendarUtil do
   日付関連の操作機能
   """
 
-  alias  alias Timex.Timezone
+  alias Timex.Timezone
 
   @time_zone_utc "Etc/UTC"
 
@@ -31,9 +31,21 @@ defmodule ServicexUtils.Calendar.CalendarUtil do
     #Timexはnilを渡すとハングするのでスルーさせる
     nil
   end
+
   def convert_time_utc2local(datetime) do
-    local_time_zone = Timezone.Local.lookup()
+    local_time_zone = get_local_time_zone()
     Timezone.convert(datetime,local_time_zone)
+  end
+
+  def get_local_time_zone() do
+    # config :servicex_utils, calender_locale: "Asia/Tokyo"
+    config_time_zone = Application.get_env(:servicex_utils, :calender_locale)
+    local_time_zone =
+    if config_time_zone == nil do
+      Timezone.Local.lookup()
+    else
+      config_time_zone
+    end
   end
 
   def convert_time_local2utc(nil) do
