@@ -21,6 +21,62 @@ defmodule ServicexUtils.Ecto.EctoUtil do
     |> result_to_map_list()
   end
 
+  @doc """
+  汎用Selectエンドポイント用
+  汎用検索向けなのでロックは取らない
+
+  ## パラメータ
+
+    - params: where句で使用したいパラメータ
+
+  ## 例
+
+　  POSTで以下のparamsが指定される想定
+    and もしくは orはマップのリストで指定する
+    and もしくは orが必要ない場合は指定しなくて
+    params = {
+        "and": [{"stock_id": 1}, {"purchase_detail_id": 3}],
+        "or": [{"status": 1}, {"status": 3}]
+    }
+    quey result
+     WHERE ((s0.`status` = ?) OR (s0.`status` = ?)) AND ((s0.`stock_id` = ?) AND (s0.`purchase_detail_id` = ?))
+
+  """
+  @spec select_by_param(Repo, Ecto.Schema, [list]) :: [list]
+  def select_by_param(repo, schema, params) do
+
+    #汎用検索向けなのでロックは取らない
+    query = from(t in schema)
+    or_list =
+        if params["or"] != nil do
+          params["or"]
+        else
+          []
+        end
+    query = or_list
+    |> Enum.reduce(query, fn(param, query) ->
+        keys = Map.keys(param)
+        key = List.first(keys)
+        or_keyword = [{String.to_atom(key), Map.get(param, key)}]
+        or_where(query, ^or_keyword)
+    end)
+    and_list =
+    if  params["and"] != nil do
+      params["and"]
+      |> Enum.map(fn(param) ->
+        keys = Map.keys(param)
+        key = List.first(keys)
+     {String.to_atom(key), Map.get(param, key)}
+    end)
+    else
+      []
+    end
+    query = query
+    |> where(^and_list)
+    repo.all(query)
+
+  end
+
   defp result_to_map_list(nil) do
     #戻りが無いSQLの場合、nilで処理する
     nil
