@@ -4,18 +4,21 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   """
   import Ecto.Query, warn: false
 
-@doc """
+  @doc """
   SQL直接実行
-  ## information
+
   EctoのSQLビルダを使用せずにSQLを直接実行する
   Ecto.Adapters.SQL.query()のWrapper関数
   戻り値を[%{row1},%{row2}...]形式で返す。
 
   ## Examples
-      iex> EctoUtil.query(MyApp.Repo, "select * from users", params)
-      [${id: => 1, name: => "userA name" },${id: => 2, name: => "userB name" }]
+  ```
+  # iex> EctoUtil.query(MyApp.Repo, "select * from users", params)
+  # [${id: => 1, name: => "userA name" },${id: => 2, name: => "userB name" }]
+  ```
+
   """
-   @spec query(Repo, string, [list]) :: [list]
+  @spec query(Repo, string, [list]) :: [list]
   def query(repo, sql, params) do
     Ecto.Adapters.SQL.query(repo, sql, params)
     |> result_to_map_list()
@@ -29,17 +32,23 @@ defmodule MateriaUtils.Ecto.EctoUtil do
 
     - params: where句で使用したいパラメータ
 
-  ## 例
+  ## Examples
 
 　  POSTで以下のparamsが指定される想定
     and もしくは orはマップのリストで指定する
-    and もしくは orが必要ない場合は指定しなくて
+    and もしくは orが必要ない場合は指定しなくてよい
+
+    ```
     params = {
         "and": [{"stock_id": 1}, {"purchase_detail_id": 3}],
         "or": [{"status": 1}, {"status": 3}]
     }
-    quey result
+    ```
+
+    上記の例で実行されるクエリのWHERE条件
+    ```
      WHERE ((s0.`status` = ?) OR (s0.`status` = ?)) AND ((s0.`stock_id` = ?) AND (s0.`purchase_detail_id` = ?))
+    ```
 
   """
   @spec select_by_param(Repo, Ecto.Schema, [list]) :: [list]

@@ -1,5 +1,6 @@
 defmodule MateriaUtils.Calendar.CalendarUtil do
   alias alias Timex.Timezone
+
   @moduledoc """
   カレンダー関連のユーティリティー実装
 
@@ -25,10 +26,21 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
   ```
 
   """
+  @spec next_date(DateTime) :: DateTime
   def next_date(date) do
     Timex.shift(date, days: 1)
   end
 
+  @doc """
+  本日を取得する。
+
+  ```
+  # iex(1)> Timex.today()
+  # ~D[2018-11-22]
+  ```
+
+  """
+  @spec today() :: Date
   def today() do
     Timex.today()
   end
@@ -42,6 +54,7 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
   ```
 
   """
+  @spec now() :: DateTime
   def now() do
     Timex.now()
   end
@@ -63,6 +76,7 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
   ```
 
   """
+  @spec convert_time_utc2local(DateTime) :: DateTime
   def convert_time_utc2local(datetime) do
     local_time_zone = get_local_time_zone_info()
     Timezone.convert(datetime, local_time_zone)
@@ -86,6 +100,7 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
   ```
 
   """
+  @spec convert_time_local2utc(DateTime) :: DateTime
   def convert_time_local2utc(datetime) do
     Timezone.convert(datetime, @time_zone_utc)
   end
@@ -105,6 +120,7 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
    ```
 
   """
+  @spec convert_time_string_utc2local(String) :: String
   def convert_time_string_utc2local(time_string) do
     with {:ok, datetime} <- Timex.parse("2018-01-02T" <> time_string <> "Z", "{ISO:Extended:Z}") do
       converted_datetime = convert_time_utc2local(datetime)
@@ -121,12 +137,13 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
   ローカルでの時刻表記文字列(HH:MM:SS)をUTCの時刻表記文字列に変換する
 
   ```
-   iex(1)> Application.put_env(:materia_utils, :calender_locale, "Asia/Tokyo")
-   iex(2)> MateriaUtils.Calendar.CalendarUtil.convert_time_string_local2utc("18:00:00")
-   "09:00:00"
+  iex(1)> Application.put_env(:materia_utils, :calender_locale, "Asia/Tokyo")
+  iex(2)> MateriaUtils.Calendar.CalendarUtil.convert_time_string_local2utc("18:00:00")
+  "09:00:00"
   ```
 
   """
+  @spec convert_time_string_utc2local(String) :: String
   def convert_time_string_local2utc(time_string) do
     timezone = get_local_time_zone_info()
     duration = Timex.Duration.from_seconds(timezone.offset_utc())
@@ -142,12 +159,13 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
   CalenderUtil用のロケーション設定を取得する
 
   ```
-  iex(1)> Application.put_env(:materia_utils, :calender_locale, "Asia/Tokyo")
-  iex(2)> MateriaUtils.Calendar.CalendarUtil.get_local_time_zone_info()
-  #<TimezoneInfo(Asia/Tokyo - JST (+09:00:00))>
+  # iex(1)> Application.put_env(:materia_utils, :calender_locale, "Asia/Tokyo")
+  # iex(2)> MateriaUtils.Calendar.CalendarUtil.get_local_time_zone_info()
+  # #<TimezoneInfo(Asia/Tokyo - JST (+09:00:00))>
   ```
 
   """
+  @spec get_local_time_zone_info() :: Timex.Timezone
   def get_local_time_zone_info() do
     local_timezone_name = Application.get_env(:materia_utils, :calender_locale)
 
@@ -169,6 +187,7 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
   ```
 
   """
+  @spec get_local_begining_of_day(DateTime) :: DateTime
   def get_local_begining_of_day(utc_datetime) do
     local_timezone_name = Application.get_env(:materia_utils, :calender_locale)
 
@@ -179,14 +198,30 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
 
   @doc """
   Enum.max_byでは日付の正しい最大値取得ができない。
-
-
+  Timex.Datetimeのmax取得はこの関数の使用を推奨
 
   ```
-  CalendarUtil.max_by(list, :target_key)
+  defp timex_parser(time_string) do
+    {:ok, datetime} = Timex.parse(time_string, "{ISO:Extended:Z}")
+    datetime
+  end
+
+  〜中略〜
+
+  list = [
+        %{check_time: timex_parser("2018-11-21 00:00:01Z")},
+        %{check_time: timex_parser("2018-11-21 00:00:00Z")},
+        %{check_time: timex_parser("2018-11-21 00:00:03Z")},
+      ]
+
+  max_map = %{check_time: timex_parser("2018-11-21 00:00:03Z")}
+
+  result_map = CalendarUtil.max_by(list, :check_time)
+  assert result_map == max_map
   ```
 
   """
+  @spec max_by([list], atom) :: DateTime
   def max_by(list, key_atom) do
     if list != nil do
       sorted =
