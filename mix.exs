@@ -1,17 +1,17 @@
-defmodule ServicexUtils.MixProject do
+defmodule MateriaUtils.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :servicex_utils,
+      app: :materia_utils,
       version: "0.1.1",
       elixir: "~> 1.6",
-      description: "This library is a utilities for service development based on Servicex.",
+      description: "This library is a utilities for service development based on Materia.",
       start_permanent: Mix.env() == :prod,
       package: [
         maintainers: ["tuchro yoshimura"],
         licenses: ["MIT"],
-        links: %{"BitBucket" => "https://bitbucket.org/karabinertech_bi/servicex_utils/src/master/"}
+        links: %{"BitBucket" => "https://bitbucket.org/karabinertech_bi/materia_utils/src/master/"}
       ],
       deps: deps()
     ]
