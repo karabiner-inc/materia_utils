@@ -1,5 +1,34 @@
 defmodule MateriaUtils.Enum.EnumLikeSqlUtil do
+  @moduledoc """
+  Enumでの集計をSQL構文に近い形で実行する為のユーティリティー
 
+  基本的にまず、group_by関数で集計対象となるキーリストを作成してから
+  後続の関数で合計、カウントなどの集計処理を行う。
+
+  ### example
+  ```
+  map_list
+  |> group_by([:key1, :key2])
+  |> xxxx(params)
+  ```
+
+  """
+
+  @doc """
+  Enumに対して、集計したい要素のキーを渡すことで、キーリストを取得する。
+
+  ```
+  iex(1)> map_list = map_list = [%{key1: 1, key2: "aaa", key3: 100}, %{key1: 2, key2: "aaa", key3: 200}, %{key1: 1, key2: "aaa", key3: 150},]
+  iex(2)> MateriaUtils.Enum.EnumLikeSqlUtil.group_by(map_list, [:key1, :key2])
+  [
+    {%{key1: 1, key2: "aaa"},
+     [%{key1: 1, key2: "aaa", key3: 100}, %{key1: 1, key2: "aaa", key3: 150}]},
+    {%{key1: 2, key2: "aaa"}, [%{key1: 2, key2: "aaa", key3: 200}]}
+  ]
+  ```
+
+  """
+  @spec group_by([Map], [String | Atom]) :: [Map]
   def group_by(maps, group_by_key_list) do
 
     maps
@@ -16,6 +45,29 @@ defmodule MateriaUtils.Enum.EnumLikeSqlUtil do
 
   end
 
+  @doc """
+  group_by/2関数で取得した集計キーリストと、集計対象キーのリストを元に合計結果を算出する。
+
+  以下のSQLの結果をエミュレートする場合、
+  ```
+  select sum(key3) from table group by (key1, key2);
+  ```
+
+  以下のように実装する。
+  ```
+  map_list
+  |> group_by([key1, key2])
+  |> sum([key3])
+  ```
+
+  ```
+  iex(1)> map_list = map_list = [%{key1: 1, key2: "aaa", key3: 100}, %{key1: 2, key2: "aaa", key3: 200}, %{key1: 1, key2: "aaa", key3: 150},]
+  iex(2)> map_list |> MateriaUtils.Enum.EnumLikeSqlUtil.group_by([:key1, :key2]) |> MateriaUtils.Enum.EnumLikeSqlUtil.sum([:key3])
+  [%{key1: 1, key2: "aaa", key3: 250}, %{key1: 2, key2: "aaa", key3: 200}]
+  ```
+
+  """
+  @spec sum([Map], [String | Atom]) :: [Map]
   def sum(group_by_results, sum_key_list) do
 
 
@@ -42,6 +94,41 @@ defmodule MateriaUtils.Enum.EnumLikeSqlUtil do
 #  {%{"item_id" => 2}, %{all_count: 1, picked_date: 0, picking_id: 3, status: 1}}
 # ]
 # %{all_count: group_by_resultsのkey毎の総件数
+
+
+@doc """
+  group_by/2関数で取得した集計キーリストを元に件数結果を算出する。
+  group_byで指定したキー条件に当てはまる全件をall_countとして返す。
+  カウント対象キーリストを指定した場合、合わせて対象の項目がnilの件数を除いた有効件数を各項目のcountとして返す。
+
+  以下のSQLの結果をエミュレートする場合、
+  ```
+  select cout(key3) from table group by (key1, key2);
+  ```
+
+  以下のように実装する。
+  ```
+  map_list
+  |> group_by([key1, key2])
+  |> count([key3])
+  ```
+
+  ```
+  iex(1)> map_list = map_list = [%{key1: 1, key2: "aaa", key3: 100}, %{key1: 2, key2: "aaa", key3: 200}, %{key1: 1, key2: "aaa", key3: 150},]
+  iex(2)> map_list |> MateriaUtils.Enum.EnumLikeSqlUtil.group_by([:key1, :key2]) |> MateriaUtils.Enum.EnumLikeSqlUtil.count()
+  [
+    {%{key1: 1, key2: "aaa"}, %{all_count: 2}},
+    {%{key1: 2, key2: "aaa"}, %{all_count: 1}}
+  ]
+  iex(3)> map_list |> MateriaUtils.Enum.EnumLikeSqlUtil.group_by([:key1, :key2]) |> MateriaUtils.Enum.EnumLikeSqlUtil.count([:key3])
+  [
+    {%{key1: 1, key2: "aaa"}, %{all_count: 2, key3: 2}},
+    {%{key1: 2, key2: "aaa"}, %{all_count: 1, key3: 1}}
+  ]
+  ```
+
+  """
+@spec count([Map], [String | Atom]) :: [Map]
 def count(group_by_results, count_key_list \\ []) do
 
   # [%{picking_id: 4, shipping_id: 5}, %{*: 5}]

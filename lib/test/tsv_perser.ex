@@ -1,5 +1,51 @@
 defmodule MateriaUtils.Perser.TsvPerser do
+  @moduledoc """
+   テストおよびseeds用のデータパーサー
+   TSVフォーマットのテキストデータをMapに変換し、関数の入力として利用しやすく変換する。
 
+
+
+  """
+
+  @aaa "aaa"
+
+  @doc false
+  def parse_tsv_to_json_sample() do
+
+    tsv = "col_int\tcol_string\tcol_date
+1\taaaa\t2018-07-17 08:18:24
+2\tbbbb\t2018-07-14 08:18:24
+"
+    MateriaUtils.Perser.TsvPerser.parse_tsv_to_json(tsv, "col_int")
+
+  end
+
+
+@doc """
+  tsvのテキストデータをMapに変換する。
+
+  ```
+　iex(1)> tsv = "col_int\tcol_string\tcol_date
+...(1)> 1\taaaa\t2018-07-17 08:18:24
+...(1)> 2\tbbbb\t2018-07-14 08:18:24
+...(1)> "
+　 iex(2)> MateriaUtils.Perser.TsvPerser.parse_tsv_to_json(tsv, "col_int")
+　 [
+  %{
+    "col_date" => "2018-07-17 08:18:24",
+    "col_int" => "1",
+    "col_string " => "aaaa"
+  },
+  %{
+    "col_date" => "2018-07-14 08:18:24",
+    "col_int" => "2",
+    "col_string " => "bbbb"
+  }
+]
+　 ```
+
+  """
+  @spec parse_tsv_to_json(String, String) :: Map
   def parse_tsv_to_json(tsv, header_key) do
     rows = tsv
     |> String.split("\n")
