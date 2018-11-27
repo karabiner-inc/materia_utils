@@ -1,5 +1,39 @@
-defmodule ServicexUtils.Perser.TsvPerser do
+defmodule MateriaUtils.Perser.TsvPerser do
+  @moduledoc """
+   テストおよびseeds用のデータパーサー
+   TSVフォーマットのテキストデータをMapに変換し、関数の入力として利用しやすく変換する。
 
+
+
+  """
+
+@doc """
+  tsvのテキストデータをMapに変換する。
+
+  ```
+
+　iex(1)> tsv = "col_int\tcol_string\tcol_date
+     ...(1)> 1\taaaa\t2018-07-17 08:18:24
+     ...(1)> 2\tbbbb\t2018-07-14 08:18:24
+     ...(1)> "
+　iex(2)> MateriaUtils.Perser.TsvPerser.parse_tsv_to_json(tsv, "col_int")
+　[
+             %{
+               "col_date" => "2018-07-17 08:18:24",
+               "col_int" => " 1",
+               "col_string" => "aaaa"
+             },
+             %{
+               "col_date" => "2018-07-14 08:18:24",
+               "col_int" => " 2",
+               "col_string" => "bbbb"
+             }
+           ]
+
+　 ```
+
+  """
+  @spec parse_tsv_to_json(String, String) :: Map
   def parse_tsv_to_json(tsv, header_key) do
     rows = tsv
     |> String.split("\n")
@@ -7,15 +41,11 @@ defmodule ServicexUtils.Perser.TsvPerser do
       Regex.match?(~r/^\s*$/,row)
     end)
 
-    #IO.puts("rows:#{inspect(rows)}")
-
     tables = rows
     |> Enum.map(fn(row) ->
       row
       |> String.split("\t")
     end)
-
-    #IO.puts("tables:#{inspect(tables)}")
 
     [{header, header_index}] = tables
     |> Enum.with_index()
@@ -34,10 +64,10 @@ defmodule ServicexUtils.Perser.TsvPerser do
     |> Enum.map(fn(data_row) ->
       data_row = data_row
       |> Enum.map(fn(column) ->
-        #IO.puts("column:#{inspect(column)}")
+
         cond do
           Regex.match?(~r/NULL/, column) ->
-            #IO.puts("match nil !")
+
             nil
           true ->
             column
@@ -45,7 +75,7 @@ defmodule ServicexUtils.Perser.TsvPerser do
       end)
       map = Enum.zip(header, data_row)
       |> Enum.into(%{})
-      #IO.puts("map:#{inspect(map)}")
+
       map
     end)
   end

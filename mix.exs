@@ -1,17 +1,19 @@
-defmodule ServicexUtils.MixProject do
+defmodule MateriaUtils.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :servicex_utils,
+      app: :materia_utils,
       version: "0.1.1",
       elixir: "~> 1.6",
-      description: "This library is a utilities for service development based on Servicex.",
+      test_coverage: [tool: ExCoveralls, ignore_modules: [MateriaUtils.Ecto.EctoUtil]],
+      preferred_cli_env: ["coveralls": :test, "coveralls.detail": :test, "coveralls.post": :test, "coveralls.html": :test],
+      description: "This library is a utilities for service development based on Materia.",
       start_permanent: Mix.env() == :prod,
       package: [
         maintainers: ["tuchro yoshimura"],
         licenses: ["MIT"],
-        links: %{"BitBucket" => "https://bitbucket.org/karabinertech_bi/servicex_utils/src/master/"}
+        links: %{"BitBucket" => "https://bitbucket.org/karabinertech_bi/materia_utils/src/master/"}
       ],
       deps: deps()
     ]
@@ -30,8 +32,11 @@ defmodule ServicexUtils.MixProject do
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
       {:ecto, "~> 2.2"},
+      {:poison, "~> 3.0"},
       {:timex, "~> 3.3"},
-      {:ex_doc, "~> 0.18.0", only: :dev}
+      {:ex_doc, "~> 0.18.0", only: :dev},
+      #{:coverex, "~> 1.5"},
+      {:excoveralls, "~> 0.10", only: :test},
     ]
   end
 end

@@ -1,0 +1,5 @@
+{
+    "skip_files": [
+      "lib/ecto/ecto_util.ex"
+    ]
+  }

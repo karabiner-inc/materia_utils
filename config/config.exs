@@ -10,11 +10,11 @@ use Mix.Config
 
 # You can configure your application as:
 #
-#     config :servicex_utils, key: :value
+#     config :materia_utils, key: :value
 #
 # and access this configuration in your application as:
 #
-#     Application.get_env(:servicex_utils, :key)
+#     Application.get_env(:materia_utils, :key)
 #
 # You can also configure a 3rd-party app:
 #
@@ -28,4 +28,4 @@ use Mix.Config
 # here (which is why it is important to import them last).
 #
 #     import_config "#{Mix.env}.exs"
-config :servicex_utils, calender_locale: "America/New_York"
+config :materia_utils, calender_locale: "America/New_York"
