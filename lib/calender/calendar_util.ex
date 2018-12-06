@@ -59,6 +59,19 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
     Timex.now()
   end
 
+  @doc """
+  現在時刻をEcto.DateTime型で返す
+
+  """
+  @spec ecto_datetime_now() :: Ecto.DateTime
+  def ecto_datetime_now() do
+    {:ok, now_datetime } = now()
+    |> convert_time_utc2local()
+    |> Timex.format!("%FT%T", :strftime)
+    |> Ecto.DateTime.cast()
+    now_datetime
+  end
+
   @doc false
   def convert_time_utc2local(nil) do
     # Timexはnilを渡すとハングするのでスルーさせる
