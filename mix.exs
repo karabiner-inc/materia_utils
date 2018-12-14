@@ -11,9 +11,9 @@ defmodule MateriaUtils.MixProject do
       description: "This library is a utilities for service development based on Materia.",
       start_permanent: Mix.env() == :prod,
       package: [
-        maintainers: ["tuchro yoshimura"],
+        maintainers: ["karabiner.inc"],
         licenses: ["MIT"],
-        links: %{"BitBucket" => "https://bitbucket.org/karabinertech_bi/materia_utils/src/master/"}
+        links: %{"BitBucket" => "https://github.com/karabiner-inc/materia_utils"}
       ],
       deps: deps()
     ]
