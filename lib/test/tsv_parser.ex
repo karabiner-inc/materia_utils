@@ -10,27 +10,31 @@ defmodule MateriaUtils.Test.TsvParser do
 @doc """
   tsvのテキストデータをMapに変換する。
 
+  "col_int col_string col_date"
+
+  [
+    %{
+      "col_date" => #DateTime<2018-07-17 08:18:24Z>,
+      "col_int" => " 1",
+      "col_string" => "aaaa"
+    },
+    %{
+      "col_date" => #DateTime<2018-07-14 08:18:24Z>,
+      "col_int" => " 2",
+      "col_string" => "bbbb"
+    }
+  ]
+
   ```
 
 　iex(1)> tsv = "col_int\tcol_string\tcol_date
      ...(1)> 1\taaaa\t2018-07-17 08:18:24
      ...(1)> 2\tbbbb\t2018-07-14 08:18:24
      ...(1)> "
-　iex(2)> MateriaUtils.Test.TsvParser.parse_tsv_to_json(tsv, "col_int")
-　[
-             %{
-               "col_date" => "2018-07-17 08:18:24",
-               "col_int" => " 1",
-               "col_string" => "aaaa"
-             },
-             %{
-               "col_date" => "2018-07-14 08:18:24",
-               "col_int" => " 2",
-               "col_string" => "bbbb"
-             }
-           ]
-
-　 ```
+     iex(2)> map_list = MateriaUtils.Test.TsvParser.parse_tsv_to_json(tsv, "col_int")
+     iex(3)> length(map_list)
+     2
+  ```
 
   """
   @spec parse_tsv_to_json(String, String) :: Map
