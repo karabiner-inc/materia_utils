@@ -1,6 +1,14 @@
 defmodule MateriaUtils.Ecto.EctoUtil do
   @moduledoc """
   Ecto関連の操作機能
+
+
+  ヒストリカルテーブルに対して、現在断面や未来の履歴を返す共通実装を含む
+
+  ヒストリカルテーブルは必ずレコードの有効時刻を表す
+  start_datetime、end_datetimeを持つテーブルであること。
+  また、同一データ同士でstard_datetimeとend_datetimeの期間重複がないことが前提となる。
+
   """
   import Ecto.Query, warn: false
 
@@ -114,11 +122,206 @@ defmodule MateriaUtils.Ecto.EctoUtil do
       |> Enum.map(fn [a, b] -> {String.to_atom(a), convert(b)} end)
       |> Map.new()
   end
+
   def convert({{year, month, day}, {hour, minites, sec, msec}}) do
     #日時解釈できるものはDateTimeに変換
     Timex.to_datetime({{year, month, day}, {hour, minites, sec, msec}})
   end
+
   def convert(attr) do
     attr
+  end
+
+  @doc """
+  ヒストリカルテーブル用のSelectエンドポイント用
+
+  対処となるRepo,スキーマ及び
+  基準となる時刻と検索キーをキーワドリスト[{k, v}]形式で指定すると
+  履歴が挿入されたヒストリカルテーブルから基準時刻時点の断面データを返す
+
+
+  ###Example
+
+  iex(1)> MateriaUtils.Ecto.EctoUtil.list_current_history(MateriaCommerce.Test.Repo, MateriaCommerce.Products.Item, Timex.now(), [{:item_code, "ICZ1000"}])
+
+
+  """
+  @spec list_current_history(Repo, Ecto.Schema, DateTime, [Keyword]) :: List
+  def list_current_history(repo, schema, base_datetime, keyword_list) do
+    # 期間の検索条件付与
+    sql = schema
+    |> where([s], s.start_datetime <= ^base_datetime and s.end_datetime >= ^base_datetime)
+    |> add_pk(keyword_list)
+    |> lock("FOR UPDATE")
+    |> repo.all()
+
+  end
+
+  @doc """
+  ヒストリカルテーブル用のSelectエンドポイント用
+
+  対処となるRepo,スキーマ及び
+  基準となる時刻と検索キーをキーワドリスト[{k, v}]形式で指定すると
+  履歴が挿入されたヒストリカルテーブルから基準時刻から未来の予定として登録された履歴の一覧を返す
+  履歴更新時に先日付のデータをクリアする用途を想定する為、
+  statt_datetime == base_datetime
+  のデータを含む
+
+  ###Example
+
+  iex(1)> MateriaUtils.Ecto.EctoUtil.list_future_histories(MateriaCommerce.Test.Repo, MateriaCommerce.Products.Item, Timex.now(), [{:item_code, "ICZ1000"}])
+
+
+  """
+  @spec list_future_histories(Repo, Ecto.Schema, DateTime, [Keyword]) :: List
+  def list_future_histories(repo, schema, base_datetime, keyword_list) do
+    sql = schema
+    |> where([s], s.start_datetime >= ^base_datetime)
+    |> add_pk(keyword_list)
+    |> lock("FOR UPDATE")
+    |> repo.all()
+  end
+
+  @doc """
+  ヒストリカルテーブル用の更新エンドポイント用
+
+  対処となるRepo,スキーマ及び
+  基準となる時刻と検索キーをキーワドリスト[{k, v}]形式で指定すると
+  履歴が挿入されたヒストリカルテーブルから基準時刻から未来の予定として登録された履歴を削除する。
+  データの更新用途を想定する為、
+  statt_datetime == base_datetime
+  のデータを含む
+
+  ###Example
+
+  iex(1)> base_datetime = MateriaUtils.Calendar.CalendarUtil.parse_iso_extended_z("2018-12-17 09:00:00Z")
+  iex(2)> MateriaUtils.Ecto.EctoUtil.delete_future_histories(MateriaCommerce.Test.Repo, MateriaCommerce.Products.Item, base_datetime, [{:item_code, "ICZ1000"}])
+
+  """
+  @spec delete_future_histories(Repo, Ecto.Schema, DateTime, [Keyword]) :: {integer(), nil | [term()]}
+  def delete_future_histories(repo, schema, base_datetime, keyword_list) do
+    sql = schema
+    |> where([s], s.start_datetime >= ^base_datetime)
+    |> add_pk(keyword_list)
+    |> repo.delete_all()
+  end
+
+  @doc """
+  ヒストリカルテーブル用のSelectエンドポイント用
+
+  対処となるRepo,スキーマ及び
+  基準となる時刻と検索キーをキーワドリスト[{k, v}]形式で指定すると
+  履歴が挿入されたヒストリカルテーブルから基準時刻より過去の履歴として登録された履歴の一覧を返す
+  statt_datetime == base_datetime
+  のデータを含まない
+
+  ###Example
+
+  iex(1)> MateriaUtils.Ecto.EctoUtil.list_past_histories(MateriaCommerce.Test.Repo, MateriaCommerce.Products.Item, Timex.now(), [{:item_code, "ICZ1000"}])
+
+
+  """
+  @spec list_past_histories(Repo, Ecto.Schema, DateTime, [Keyword]) :: List
+  def list_past_histories(repo, schema, base_datetime, keyword_list) do
+    sql = schema
+    |> where([s], s.start_datetime < ^base_datetime)
+    |> add_pk(keyword_list)
+    |> lock("FOR UPDATE")
+    |> repo.all()
+  end
+
+  @doc """
+  query1 = schema |> select([s], [s.item_code, max(s.stard_datetime)]) |> from([s]) |> where([s], s.start_datetime < ^base_datetime) |> where(^[{:item_code, "ICZ1000"}])
+  query2 = from(s in MateriaCommerce.Products.Item, join: s2 in subquery(query1))
+  query2 = schema |> where(^[{:item_code, "ICZ1000"}])
+  """
+  #@spec list_recent_history(Repo, Ecto.Schema, DateTime, [Keyword]) :: List
+  #def list_recent_history(repo, schema, base_datetime, keyword_list) do
+  #  sql = schema
+  #  |> where([s], s.start_datetime > ^base_datetime)
+  #  |> add_pk(keyword_list)
+  #  |> lock("FOR UPDATE")
+  #  |> repo.all()
+  #end
+
+  @doc """
+  MateriaUtils.Ecto.EctoUtil.list_recent_history(MateriaCommerce.Test.Repo, MateriaCommerce.Products.Item, Timex.now(), [{:item_code, "ICZ1000"}])
+  """
+  @spec list_recent_history(Repo, Ecto.Schema, DateTime, [Keyword]) :: List
+  def list_recent_history(repo, schema, base_datetime, keyword_list) do
+    sql1 = "
+select
+  *
+from
+  (
+    select
+      *
+    from
+      items
+    where
+"
+sql2 = "
+    ) s1
+  join(
+      select
+        item_code,
+        max( start_datetime ) as start_datetime
+      from
+        items
+      where
+        start_datetime < $1 and
+"
+sql3 = "
+      group by
+"
+sql4 = "
+    ) s2 on
+    s1.start_datetime = s2.start_datetime
+"
+   and_string = keyword_list
+    |> Enum.reduce("", fn(keyword, acc) ->
+        {k, v} = keyword
+        k_string = Atom.to_string(k)
+        and_string = k_string <> " = '" <> v <> "'"
+        and_string
+        if acc == "" do
+          and_string
+        else
+          " and " <> and_string
+        end
+    end)
+
+    group_by_string = keyword_list
+    |> Enum.reduce("", fn(keyword, acc) ->
+      {k, v} = keyword
+      k_string = Atom.to_string(k)
+      group_by_string = k_string
+      group_by_string
+      if acc == "" do
+        group_by_string
+      else
+        ", " <> group_by_string
+      end
+    end)
+
+    join_on_string = keyword_list
+    |> Enum.reduce("", fn(keyword, acc) ->
+      {k, v} = keyword
+      k_string = Atom.to_string(k)
+      " and " <> "s1." <> k_string <> " = S2." <> k_string
+    end)
+
+    sql = sql1 <> and_string <> sql2 <> and_string <> sql3 <> group_by_string <> sql4 <> join_on_string
+    query(repo, sql, [ base_datetime ])
+
+  end
+
+  defp add_pk(sql, key_word_list) do
+    # 主キーの検索条件付与
+    sql = [key_word_list]
+    |> Enum.reduce(sql, fn(key_word, acc) ->
+      acc
+      |> where(^key_word)
+    end)
   end
 end

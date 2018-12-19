@@ -245,4 +245,20 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
       nil
     end
   end
+
+  @doc """
+  ISO拡張文字列表記の時刻をDateTime型にパースする
+
+  ### Example
+
+  ```
+  iex(1)> MateriaUtils.Calendar.CalendarUtil.parse_iso_extended_z("2018-08-08 09:00:00Z")
+  #DateTime<2018-08-08 09:00:00Z>
+  ```
+
+  """
+  @spec parse_iso_extended_z(String) :: DateTime
+  def parse_iso_extended_z(datetime_string) do
+    Timex.parse(datetime_string, "{ISO:Extended:Z}")
+  end
 end

@@ -1,4 +1,4 @@
-defmodule MateriaUtils.Perser.TsvPerser do
+defmodule MateriaUtils.Test.TsvParser do
   @moduledoc """
    テストおよびseeds用のデータパーサー
    TSVフォーマットのテキストデータをMapに変換し、関数の入力として利用しやすく変換する。
@@ -10,27 +10,31 @@ defmodule MateriaUtils.Perser.TsvPerser do
 @doc """
   tsvのテキストデータをMapに変換する。
 
+  "col_int col_string col_date"
+
+  [
+    %{
+      "col_date" => #DateTime<2018-07-17 08:18:24Z>,
+      "col_int" => " 1",
+      "col_string" => "aaaa"
+    },
+    %{
+      "col_date" => #DateTime<2018-07-14 08:18:24Z>,
+      "col_int" => " 2",
+      "col_string" => "bbbb"
+    }
+  ]
+
   ```
 
 　iex(1)> tsv = "col_int\tcol_string\tcol_date
      ...(1)> 1\taaaa\t2018-07-17 08:18:24
      ...(1)> 2\tbbbb\t2018-07-14 08:18:24
      ...(1)> "
-　iex(2)> MateriaUtils.Perser.TsvPerser.parse_tsv_to_json(tsv, "col_int")
-　[
-             %{
-               "col_date" => "2018-07-17 08:18:24",
-               "col_int" => " 1",
-               "col_string" => "aaaa"
-             },
-             %{
-               "col_date" => "2018-07-14 08:18:24",
-               "col_int" => " 2",
-               "col_string" => "bbbb"
-             }
-           ]
-
-　 ```
+     iex(2)> map_list = MateriaUtils.Test.TsvParser.parse_tsv_to_json(tsv, "col_int")
+     iex(3)> length(map_list)
+     2
+  ```
 
   """
   @spec parse_tsv_to_json(String, String) :: Map
@@ -70,7 +74,13 @@ defmodule MateriaUtils.Perser.TsvPerser do
 
             nil
           true ->
-            column
+            # dateitimeにconvert可能であればconvertする
+            with {:ok, datetime } <- Timex.parse(column <> "Z", "{ISO:Extended:Z}") do
+              datetime
+            else
+            {:error, _reason} ->
+             column
+            end
         end
       end)
       map = Enum.zip(header, data_row)
