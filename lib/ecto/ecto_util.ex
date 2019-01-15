@@ -249,71 +249,58 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   """
   @spec list_recent_history(Repo, Ecto.Schema, DateTime, [Keyword]) :: List
   def list_recent_history(repo, schema, base_datetime, keyword_list) do
-    sql1 = "
-select
-  *
-from
-  (
-    select
-      *
-    from
-      items
-    where
-"
-sql2 = "
-    ) s1
-  join(
-      select
-        item_code,
-        max( start_datetime ) as start_datetime
-      from
-        items
-      where
-        start_datetime < $1 and
-"
-sql3 = "
-      group by
-"
-sql4 = "
-    ) s2 on
-    s1.start_datetime = s2.start_datetime
-"
-   and_string = keyword_list
-    |> Enum.reduce("", fn(keyword, acc) ->
-        {k, v} = keyword
-        k_string = Atom.to_string(k)
-        and_string = k_string <> " = '" <> v <> "'"
-        and_string
-        if acc == "" do
-          and_string
-        else
-          " and " <> and_string
-        end
-    end)
-
-    group_by_string = keyword_list
-    |> Enum.reduce("", fn(keyword, acc) ->
-      {k, v} = keyword
-      k_string = Atom.to_string(k)
-      group_by_string = k_string
-      group_by_string
-      if acc == "" do
-        group_by_string
-      else
-        ", " <> group_by_string
-      end
-    end)
-
+    table_name = Ecto.get_meta(struct(schema), :source)
+    select_string = keyword_list
+                    |> Enum.reduce(
+                         "",
+                         fn (keyword, acc) ->
+                           {k, v} = keyword
+                           if acc != "", do: "#{acc}, #{k}", else: "#{acc}#{k}"
+                         end
+                       )
+    and_string = keyword_list
+                 |> Enum.reduce(
+                      "",
+                      fn (keyword, acc) ->
+                        {k, v} = keyword
+                        if acc != "", do: "#{acc} and #{k} = '#{v}'", else: "#{acc}#{k} = '#{v}'"
+                      end
+                    )
     join_on_string = keyword_list
-    |> Enum.reduce("", fn(keyword, acc) ->
-      {k, v} = keyword
-      k_string = Atom.to_string(k)
-      " and " <> "s1." <> k_string <> " = S2." <> k_string
-    end)
+                     |> Enum.reduce(
+                          "",
+                          fn (keyword, acc) ->
+                            {k, v} = keyword
+                            "#{acc} and s1.#{k} = s2.#{k}"
+                          end
+                        )
+    sql = "
+      select
+        *
+      from
+        (
+          select
+            *
+          from
+            #{table_name}
+          where
+            #{and_string}
+        ) s1
+        join(
+          select
+            #{select_string} ,max( start_datetime ) as start_datetime
+          from
+            #{table_name}
+          where
+            start_datetime < $1 and
+            #{and_string}
+          group by
+            #{select_string}
+        ) s2 on
+        s1.start_datetime = s2.start_datetime
+        #{join_on_string}"
 
-    sql = sql1 <> and_string <> sql2 <> and_string <> sql3 <> group_by_string <> sql4 <> join_on_string
-    query(repo, sql, [ base_datetime ])
-
+    query(repo, sql, [base_datetime])
   end
 
   defp add_pk(sql, key_word_list) do
