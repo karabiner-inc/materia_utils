@@ -118,6 +118,35 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
     Timezone.convert(datetime, @time_zone_utc)
   end
 
+  @doc """
+  local_datetimeをutc_datetimeへ変換する
+
+  ```
+  iex(1)> Application.put_env(:materia_utils, :calender_locale, "Asia/Tokyo")
+  iex(2)> {:ok, utc_datetime} = Timex.parse("2018-08-08T09:00:00Z", "{ISO:Extended:Z}")
+  iex(3)> local_datetime = MateriaUtils.Calendar.CalendarUtil.convert_time_utc2local(utc_datetime)
+  iex(4)> utc_datetime2 = MateriaUtils.Calendar.CalendarUtil.convert_time_local2utc(%{start_date: local_datetime}, [:start_date])
+  iex(5)> utc_datetime2.start_date
+  #DateTime<2018-08-08 09:00:00Z>
+  ```
+
+  """
+  @spec convert_time_local2utc(Map, List) :: Map
+  def convert_time_local2utc(attr, key_list) when is_map(attr) and is_list(key_list) do
+    converted_attr = key_list
+    |> Enum.reduce(attr, fn(key, attr) ->
+        value = Map.get(attr, key)
+        attr =
+        if Map.has_key?(attr, key) and value != nil do
+          Map.put(attr, key, Timex.Timezone.convert(value, "Etc/UTC"))
+        else
+          attr
+        end
+    end)
+    converted_attr
+  end
+
+
   @doc false
   def convert_time_string_utc2local(nil) do
     nil
@@ -252,7 +281,8 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
   ### Example
 
   ```
-  iex(1)> MateriaUtils.Calendar.CalendarUtil.parse_iso_extended_z("2018-08-08 09:00:00Z")
+  iex(1)> {:ok, datetime } = MateriaUtils.Calendar.CalendarUtil.parse_iso_extended_z("2018-08-08 09:00:00Z")
+  iex(2)> datetime
   #DateTime<2018-08-08 09:00:00Z>
   ```
 
@@ -260,5 +290,35 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
   @spec parse_iso_extended_z(String) :: DateTime
   def parse_iso_extended_z(datetime_string) do
     Timex.parse(datetime_string, "{ISO:Extended:Z}")
+  end
+
+  @doc """
+  文字列日時(YYYY-MM-DD hh:mm:ssZ)をISO拡張文字列表記の時刻にパースする
+
+  ### Example
+
+  ```
+  iex(1)> datetime_map =  MateriaUtils.Calendar.CalendarUtil.parse_datetime_strftime(%{start_date: "2010-04-17 14:00:00Z", end_date: "2010-04-17 15:00:00Z" }, [:start_date, :end_date])
+  iex(2)> datetime_map.start_date
+  #DateTime<2010-04-17 14:00:00Z>
+  ```
+
+  """
+  def parse_datetime_strftime(attr, key_list) when is_map(attr) and is_list(key_list) do
+    converted_attr = key_list
+    |> Enum.reduce(attr, fn(key, attr) ->
+        value = Map.get(attr, key)
+        attr =
+        if Map.has_key?(attr, key) and value != nil do
+          with {:ok, date_time} <- Timex.parse(value, "{ISO:Extended:Z}") do
+            Map.put(attr, key, date_time)
+          else
+            _ -> attr
+          end
+        else
+          attr
+        end
+    end)
+    converted_attr
   end
 end

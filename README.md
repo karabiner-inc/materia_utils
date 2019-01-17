@@ -2,6 +2,7 @@
 
 [![hex.pm](https://img.shields.io/apm/l/materia_utils.svg)](https://github.com/karabiner-inc/materia_utils)
 [![Coverage Status](https://coveralls.io/repos/github/karabiner-inc/materia_utils/badge.svg?branch=master)](https://coveralls.io/github/karabiner-inc/materia_utils?branch=master)
+[![Build Status](https://travis-ci.org/karabiner-inc/materia_utils.svg?branch=master)](https://travis-ci.org/karabiner-inc/materia_utils)
 
 Karabiner製ElixirOSS　Materia用ユーティリティー集
 
