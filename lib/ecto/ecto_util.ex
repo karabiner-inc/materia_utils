@@ -303,7 +303,7 @@ defmodule MateriaUtils.Ecto.EctoUtil do
     query(repo, sql, [base_datetime])
   end
 
-  defp add_pk(sql, key_word_list) do
+  def add_pk(sql, key_word_list) do
     # 主キーの検索条件付与
     sql = [key_word_list]
     |> Enum.reduce(sql, fn(key_word, acc) ->
