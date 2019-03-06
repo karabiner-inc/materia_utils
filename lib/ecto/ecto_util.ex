@@ -149,12 +149,77 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   @spec list_current_history(Repo, Ecto.Schema, DateTime, [Keyword]) :: List
   def list_current_history(repo, schema, base_datetime, keyword_list) do
     # 期間の検索条件付与
-    sql = schema
-    |> where([s], s.start_datetime <= ^base_datetime and s.end_datetime >= ^base_datetime)
-    |> add_pk(keyword_list)
+    list_current_history(repo, schema, base_datetime, keyword_list, nil)
+
+  end
+
+  @doc """
+  ヒストリカルテーブル用のSelectエンドポイント用の汎用検索
+
+  対象となるRepo, Schema, 基準日時, 一意キー, 検索キーを指定すると､
+  基準事項時点の断面データをベースに汎用検索結果を返す｡
+
+  """
+  def list_current_history(repo, schema, base_datetime, primary_keywords, condition_keywords) do
+    query_current_history(repo, schema, base_datetime, primary_keywords, condition_keywords)
     |> lock("FOR UPDATE")
     |> repo.all()
+  end
 
+  @doc """
+  ヒストリカルテーブル用のSelectエンドポイント用の汎用検索
+
+  対象となるRepo, Schema, 基準日時, 一意キー, 検索キーを指定すると､
+  基準事項時点の断面データをベースに汎用検索結果を返し､ロックは取得しない
+
+  """
+  def list_current_history_no_lock(repo, schema, base_datetime, primary_keywords, condition_keywords) do
+    query_current_history(repo, schema, base_datetime, primary_keywords, condition_keywords)
+    |> repo.all()
+  end
+
+  @doc """
+  ヒストリカルテーブル用のSelectエンドポイント用の汎用検索のQueryを返す
+  """
+  def query_current_history(repo, schema, base_datetime, primary_keywords, condition_keywords) do
+    query = schema
+    query = cond do
+      condition_keywords == nil ->
+        query
+      condition_keywords["or"] != nil ->
+        condition_keywords["or"]
+        |> Enum.reduce(
+             query,
+             fn (param, query) ->
+               keys = Map.keys(param)
+               key = List.first(keys)
+               or_keyword = [{String.to_atom(key), Map.get(param, key)}]
+               or_where(query, ^or_keyword)
+             end
+           )
+      true ->
+        query
+    end
+    query = cond do
+      condition_keywords == nil ->
+        query
+      condition_keywords["and"] != nil ->
+        and_condition = condition_keywords["and"]
+                        |> Enum.map(
+                             fn (param) ->
+                               keys = Map.keys(param)
+                               key = List.first(keys)
+                               {String.to_atom(key), Map.get(param, key)}
+                             end
+                           )
+        query
+        |> where(^and_condition)
+      true ->
+        query
+    end
+    query
+    |> where([s], s.start_datetime <= ^base_datetime and s.end_datetime >= ^base_datetime)
+    |> add_pk(primary_keywords)
   end
 
   @doc """
