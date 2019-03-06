@@ -161,6 +161,27 @@ defmodule MateriaUtils.Ecto.EctoUtil do
 
   """
   def list_current_history(repo, schema, base_datetime, primary_keywords, condition_keywords) do
+    query_current_history(repo, schema, base_datetime, primary_keywords, condition_keywords)
+    |> lock("FOR UPDATE")
+    |> repo.all()
+  end
+
+  @doc """
+  ヒストリカルテーブル用のSelectエンドポイント用の汎用検索
+
+  対象となるRepo, Schema, 基準日時, 一意キー, 検索キーを指定すると､
+  基準事項時点の断面データをベースに汎用検索結果を返し､ロックは取得しない
+
+  """
+  def list_current_history_no_lock(repo, schema, base_datetime, primary_keywords, condition_keywords) do
+    query_current_history(repo, schema, base_datetime, primary_keywords, condition_keywords)
+    |> repo.all()
+  end
+
+  @doc """
+  ヒストリカルテーブル用のSelectエンドポイント用の汎用検索のQueryを返す
+  """
+  def query_current_history(repo, schema, base_datetime, primary_keywords, condition_keywords) do
     query = schema
     query = cond do
       condition_keywords == nil ->
@@ -199,8 +220,6 @@ defmodule MateriaUtils.Ecto.EctoUtil do
     query
     |> where([s], s.start_datetime <= ^base_datetime and s.end_datetime >= ^base_datetime)
     |> add_pk(primary_keywords)
-    |> lock("FOR UPDATE")
-    |> repo.all()
   end
 
   @doc """
