@@ -38,9 +38,9 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
   本日を取得する。
 
   ```
-  iex(1)> Application.put_env(:materia_utils, :test_base_datetime,, "2019-01-01T00:00:00.000Z")
+  iex(1)> Application.put_env(:materia_utils, :test_base_datetime, "2019-01-01T00:00:00.000Z")
   iex(2)> MateriaUtils.Calendar.CalendarUtil.today()
-  ~D[2018-11-22]
+  ~D[2019-01-01]
   ```
 
   """
@@ -61,7 +61,7 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
 
 
   ```
-  iex(1)> Application.put_env(:materia_utils, :test_base_datetime,, "2019-01-01T00:00:00.000Z")
+  iex(1)> Application.put_env(:materia_utils, :test_base_datetime, "2019-01-01T00:00:00.000Z")
   iex(2)> MateriaUtils.Calendar.CalendarUtil.now()
   #DateTime<2019-01-01 00:00:00.000Z>
   ```
