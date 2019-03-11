@@ -62,8 +62,25 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   @spec select_by_param(Repo, Ecto.Schema, [list]) :: [list]
   def select_by_param(repo, schema, params) do
 
-    #汎用検索向けなのでロックは取らない
     query = from(t in schema)
+    query = build_query_by_params(query, params)
+    repo.all(query)
+
+  end
+
+  @spec delete_by_param(Repo, Ecto.Schema, Atom, DateTime, [list]) :: [list]
+  def delete_by_param(repo, schema, base_datetime_column, base_datetime, params) do
+
+    query = from(t in schema)
+    query = query
+    |> where([t], field(t, ^base_datetime_column) <= ^base_datetime)
+    query = build_query_by_params(query, params)
+    repo.delete_all(query)
+
+  end
+
+  defp build_query_by_params(query, params) do
+    #汎用検索向けなのでロックは取らない
     or_list =
         if params["or"] != nil do
           params["or"]
@@ -90,8 +107,6 @@ defmodule MateriaUtils.Ecto.EctoUtil do
     end
     query = query
     |> where(^and_list)
-    repo.all(query)
-
   end
 
   defp result_to_map_list(nil) do

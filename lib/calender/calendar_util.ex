@@ -10,7 +10,10 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
   ```
    config :materia_utils, calender_locale: "Asia/Tokyo"
    ```
-   設定しない場合、サーバーロケールが使用される.。
+   設定しない場合、サーバーロケールが使用される。
+
+   また、テスト基準日時を設定した場合、サーバー時刻ではなく、設定した固定時刻を現在時刻として返す。
+   config :materia_utils, test_base_datetime: "2019-01-01T00:00:00.000Z"
   """
 
   @time_zone_utc "Etc/UTC"
@@ -35,28 +38,46 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
   本日を取得する。
 
   ```
-  # iex(1)> Timex.today()
-  # ~D[2018-11-22]
+  iex(1)> Application.put_env(:materia_utils, :test_base_datetime, "2019-01-01T00:00:00.000Z")
+  iex(2)> MateriaUtils.Calendar.CalendarUtil.today()
+  ~D[2019-01-01]
   ```
 
   """
   @spec today() :: Date
   def today() do
-    Timex.today()
+    test_base_datetime = Application.get_env(:materia_utils, :test_base_datetime)
+
+    if test_base_datetime == nil do
+      Timex.today()
+    else
+      {:ok, base_datetime} = Timex.parse(test_base_datetime, "{ISO:Extended}")
+      DateTime.to_date(base_datetime)
+    end
   end
 
   @doc """
   サーバーの現在時刻をサーバーに設定されたロケールで取得する
 
+
   ```
-  # iex(1)> MateriaUtils.Calendar.CalendarUtil.now()
-  # #DateTime<2018-11-22 08:44:22.437929Z>
+  iex(1)> Application.put_env(:materia_utils, :test_base_datetime, "2019-01-01T00:00:00.000Z")
+  iex(2)> MateriaUtils.Calendar.CalendarUtil.now()
+  #DateTime<2019-01-01 00:00:00.000Z>
   ```
 
   """
   @spec now() :: DateTime
   def now() do
-    Timex.now()
+    test_base_datetime = Application.get_env(:materia_utils, :test_base_datetime)
+
+    if test_base_datetime == nil do
+      Timex.now()
+    else
+      {:ok, base_datetime} = Timex.parse(test_base_datetime, "{ISO:Extended}")
+      base_datetime
+    end
+
   end
 
   @doc """
