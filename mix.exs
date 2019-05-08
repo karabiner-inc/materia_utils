@@ -34,6 +34,7 @@ defmodule MateriaUtils.MixProject do
       {:ecto, "~> 2.2"},
       {:poison, "~> 3.0"},
       {:timex, "~> 3.3"},
+      {:mojiex, "~> 0.1.0"},
       {:ex_doc, "~> 0.18.0", only: :dev},
       #{:coverex, "~> 1.5"},
       {:excoveralls, "~> 0.10", only: :test},
