@@ -26,14 +26,17 @@ defmodule MateriaUtils.String.StringUtil do
   true
   iex(3)> MateriaUtils.String.StringUtil.is_empty([])
   true
-  iex(3)> MateriaUtils.String.StringUtil.is_empty("Materia")
+  iex(4)> MateriaUtils.String.StringUtil.is_empty(%{})
+  true
+  iex(5)> MateriaUtils.String.StringUtil.is_empty("Materia")
   false
   """
-  def is_empty(string) do
+  def is_empty(value) do
     _ = cond do
-      is_nil(string) -> true
-      string == "" -> true
-      string == [] -> true
+      is_nil(value) -> true
+      value == "" -> true
+      value == [] -> true
+      value == %{} -> true
       true -> false
     end
   end
