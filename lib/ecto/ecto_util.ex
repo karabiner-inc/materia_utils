@@ -393,7 +393,13 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   end
 
   @doc """
-  MateriaUtils.Ecto.EctoUtil.join_on_dynamic([:contract_no])
+  keywords = [:request_number, :request_key1]
+  MateriaUtils.Ecto.EctoUtil.dynamic_join_on(keywords)
+  MateriaCommerce.Commerces.Request |> join(:inner, [t0, t1], t1 in MateriaCommerce.Commerces.Request, ^MateriaUtils.Ecto.EctoUtil.dynamic_join_on(keywords))
+
+  #Ecto.Query<from r0 in MateriaCommerce.Commerces.Request,
+  join: r1 in MateriaCommerce.Commerces.Request,
+  on: r0.request_key1 == r1.request_key1 and r0.request_number == r1.request_number>
   """
   def dynamic_join_on(keywords) do
     keywords
