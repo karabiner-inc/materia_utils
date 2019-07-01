@@ -19,4 +19,23 @@ defmodule MateriaUtils.String.StringUtil do
     |> String.downcase()
   end
 
+  @doc """
+  iex(1)> MateriaUtils.String.StringUtil.is_empty(nil)
+  true
+  iex(2)> MateriaUtils.String.StringUtil.is_empty("")
+  true
+  iex(3)> MateriaUtils.String.StringUtil.is_empty([])
+  true
+  iex(3)> MateriaUtils.String.StringUtil.is_empty("Materia")
+  false
+  """
+  def is_empty(string) do
+    _ = cond do
+      is_nil(string) -> true
+      string == "" -> true
+      string == [] -> true
+      true -> false
+    end
+  end
+
 end
