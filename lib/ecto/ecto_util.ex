@@ -391,4 +391,63 @@ defmodule MateriaUtils.Ecto.EctoUtil do
       |> where(^key_word)
     end)
   end
+
+  @doc """
+  ********************
+  Case1: MultiColumns
+  keywords = [:id, :request_key1, :request_date1, :quantity1, :description] # bigint, varchar, timestamp, integer, string
+  MateriaCommerce.Commerces.Request |> join(:inner, [t0, t1], t1 in MateriaCommerce.Commerces.Request, ^MateriaUtils.Ecto.EctoUtil.dynamic_join_on(keywords)) |> where([t0], t0.id == 1) |> Repo.all |> Enum.count()
+  1
+  ** SQL
+  SELECT r0."id", r0."accuracy", r0."description", r0."end_datetime", r0."lock_version", r0."note1", r0."note2", r0."note3", r0."note4", r0."quantity1", r0."quantity2", r0."quantity3", r0."quantity4", r0."quantity5", r0."quantity6", r0."request_date1", r0."request_date2", r0."request_date3", r0."request_date4", r0."request_date5", r0."request_date6", r0."request_key1", r0."request_key2", r0."request_key3", r0."request_key4", r0."request_key5", r0."request_name", r0."request_number", r0."start_datetime", r0."status", r0."user_id", r0."inserted_id", r0."inserted_at", r0."updated_at"
+  FROM "requests" AS r0 INNER JOIN "requests" AS r1 ON (r0."description" = r1."description") AND ((r0."quantity1" = r1."quantity1") AND ((r0."request_date1" = r1."request_date1") AND ((r0."request_key1" = r1."request_key1") AND (r0."id" = r1."id")))) WHERE (r0."id" = 1) []
+  ** Ecto.Query
+  #Ecto.Query<from r0 in MateriaCommerce.Commerces.Request,
+  join: r1 in MateriaCommerce.Commerces.Request,
+  on: r0.description == r1.description and (r0.quantity1 == r1.quantity1 and (r0.request_date1 == r1.request_date1 and (r0.request_key1 == r1.request_key1 and r0.id == r1.id))),
+  where: r0.id == 1>
+
+  ********************
+  Case2: SingleColumn
+  keywords = [:id] # bigint
+  MateriaCommerce.Commerces.Request |> join(:inner, [t0, t1], t1 in MateriaCommerce.Commerces.Request, ^MateriaUtils.Ecto.EctoUtil.dynamic_join_on(keywords)) |> where([t0], t0.id == 1) |> Repo.all |> Enum.count()
+  1
+  ** SQL
+  SELECT r0."id", r0."accuracy", r0."description", r0."end_datetime", r0."lock_version", r0."note1", r0."note2", r0."note3", r0."note4", r0."quantity1", r0."quantity2", r0."quantity3", r0."quantity4", r0."quantity5", r0."quantity6", r0."request_date1", r0."request_date2", r0."request_date3", r0."request_date4", r0."request_date5", r0."request_date6", r0."request_key1", r0."request_key2", r0."request_key3", r0."request_key4", r0."request_key5", r0."request_name", r0."request_number", r0."start_datetime", r0."status", r0."user_id", r0."inserted_id", r0."inserted_at", r0."updated_at"
+  FROM "requests" AS r0 INNER JOIN "requests" AS r1 ON r0."id" = r1."id" WHERE (r0."id" = 1) []
+  ** Ecto.Query
+  #Ecto.Query<from r0 in MateriaCommerce.Commerces.Request,
+  join: r1 in MateriaCommerce.Commerces.Request, on: r0.id == r1.id,
+  where: r0.id == 1>
+
+  ********************
+  Case3: keywords is nil
+  keywords = nil
+  MateriaCommerce.Commerces.Request |> join(:inner, [t0, t1], t1 in MateriaCommerce.Commerces.Request, ^MateriaUtils.Ecto.EctoUtil.dynamic_join_on(keywords)) |> where([t0], t0.id == 1) |> Repo.all |> Enum.count()
+  ** (ArgumentError) keywords is empty.
+    (materia_utils) lib/ecto/ecto_util.ex:455: MateriaUtils.Ecto.EctoUtil.dynamic_join_on/1
+
+  ********************
+  Case4: keywords is []
+  keywords = []
+  MateriaCommerce.Commerces.Request |> join(:inner, [t0, t1], t1 in MateriaCommerce.Commerces.Request, ^MateriaUtils.Ecto.EctoUtil.dynamic_join_on(keywords)) |> where([t0], t0.id == 1) |> Repo.all |> Enum.count()
+  ** (ArgumentError) keywords is empty.
+    (materia_utils) lib/ecto/ecto_util.ex:455: MateriaUtils.Ecto.EctoUtil.dynamic_join_on/1
+
+  """
+  def dynamic_join_on(keywords) do
+    _ = cond do
+      MateriaUtils.String.StringUtil.is_empty(keywords) -> raise ArgumentError, message: "keywords is empty."
+      true -> keywords
+              |> Enum.reduce(
+                   nil,
+                   fn (keyword, acc) ->
+                     cond do
+                       acc == nil -> dynamic([t0, t1], field(t0, ^keyword) == field(t1, ^keyword))
+                       true -> dynamic([t0, t1], field(t0, ^keyword) == field(t1, ^keyword) and ^acc)
+                     end
+                   end
+                 )
+    end
+  end
 end
