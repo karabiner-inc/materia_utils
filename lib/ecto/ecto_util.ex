@@ -391,4 +391,20 @@ defmodule MateriaUtils.Ecto.EctoUtil do
       |> where(^key_word)
     end)
   end
+
+  @doc """
+  MateriaUtils.Ecto.EctoUtil.join_on_dynamic([:contract_no])
+  """
+  def dynamic_join_on(keywords) do
+    keywords
+    |> Enum.reduce(
+         nil,
+         fn (keyword, acc) ->
+           cond do
+             acc == nil -> dynamic([t0, t1], field(t0, ^keyword) == field(t1, ^keyword))
+             true -> dynamic([t0, t1], field(t0, ^keyword) == field(t1, ^keyword) and ^acc)
+           end
+         end
+       )
+  end
 end
