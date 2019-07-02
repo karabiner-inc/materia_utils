@@ -58,8 +58,14 @@ defmodule MateriaUtils.Enum.SortUtil do
     results
     |> Enum.sort(
          fn current, next ->
-           current = Map.delete(current, :__struct__)
-           next = Map.delete(next, :__struct__)
+           current = cond do
+             Map.has_key?(current, :__struct__) -> Map.from_struct(current)
+             true -> current
+           end
+           next = cond do
+             Map.has_key?(next, :__struct__) -> Map.from_struct(next)
+             true -> next
+           end
            is_sorted = keywords
                        |> Enum.reduce(
                             nil,
