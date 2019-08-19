@@ -184,8 +184,8 @@ defmodule MateriaUtils.Enum.EnumLikeSqlUtil do
 
 
   ```
-  iex(1)> association_keyword_list = [id: :parent_id]
-  iex(2)> EnumLikeSqlUtil.dynamic_preload(:has_many, association_keyword_list, parents, childs, :childs)
+  > association_keyword_list = [id: :parent_id]
+  > EnumLikeSqlUtil.dynamic_preload(:has_many, association_keyword_list, parents, childs, :childs)
   [
    %App.Parent{
      id: 1,
