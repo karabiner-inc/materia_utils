@@ -221,7 +221,7 @@ defmodule MateriaUtils.Enum.EnumLikeSqlUtil do
     group_by_list =
       child_list
       |> Enum.map(fn child -> Map.from_struct(child) end)
-      |> EnumLikeSqlUtil.group_by(associate_key_list)
+      |> group_by(associate_key_list)
 
     parent_list
     |> Enum.map(fn parent ->
