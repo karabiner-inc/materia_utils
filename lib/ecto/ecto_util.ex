@@ -463,11 +463,12 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   parents　親スキーマのリスト(MapリストはNG)
   childs 子スキーマのリスト(MapリストはNG)
   :childs 親スキーマに付け加える子スキーマリストの項目名(atomで指定)
+  App.Context.Child 子スキーマのモジュールを指定、最終的に子要素をMap->Structureへ変換する際に仕様
 
 
   ```
   > association_keyword_list = [id: :parent_id]
-  > EctoUtil.dynamic_preload(:has_many, association_keyword_list, parents, childs, :childs)
+  > EctoUtil.dynamic_preload(:has_many, association_keyword_list, parents, childs, :childs, App.Context.Child)
   [
    %App.Parent{
      id: 1,
@@ -489,8 +490,8 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   ```
 
   """
-  @spec dynamic_preload(Atom, [Keyword], List, List, Atom) :: List
-  def dynamic_preload(:has_many, associate_keyword_list, parent_list, child_list, child_name_atom)
+  @spec dynamic_preload(Atom, [Keyword], List, List, Atom, Module) :: List
+  def dynamic_preload(:has_many, associate_keyword_list, parent_list, child_list, child_name_atom, module)
       when is_list(associate_keyword_list) and is_list(parent_list) and is_list(child_list) and
              is_atom(child_name_atom) do
     associate_key_list =
@@ -527,9 +528,13 @@ defmodule MateriaUtils.Ecto.EctoUtil do
 
       {k, v} = child_key_value
 
+      struct_v = module
+      |> struct(v)
+
       parent
-      |> Map.put(child_name_atom, v)
+      |> Map.put(child_name_atom, struct_v)
     end)
+
   end
 
 end
