@@ -463,12 +463,10 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   parents　親スキーマのリスト(MapリストはNG)
   childs 子スキーマのリスト(MapリストはNG)
   :childs 親スキーマに付け加える子スキーマリストの項目名(atomで指定)
-  App.Context.Child 子スキーマのモジュールを指定、最終的に子要素をMap->Structureへ変換する際に仕様
-
 
   ```
   > association_keyword_list = [id: :parent_id]
-  > EctoUtil.dynamic_preload(:has_many, association_keyword_list, parents, childs, :childs, App.Context.Child)
+  > EctoUtil.dynamic_preload(:has_many, association_keyword_list, parents, childs, :childs, %App.Context.Child{})
   [
    %App.Parent{
      id: 1,
@@ -490,50 +488,66 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   ```
 
   """
-  @spec dynamic_preload(Atom, [Keyword], List, List, Atom, Module) :: List
-  def dynamic_preload(:has_many, associate_keyword_list, parent_list, child_list, child_name_atom, module)
+  @spec dynamic_preload(Atom, [Keyword], List, List, Atom) :: List
+  def dynamic_preload(:has_many, associate_keyword_list, parent_list, child_list, child_name_atom)
       when is_list(associate_keyword_list) and is_list(parent_list) and is_list(child_list) and
              is_atom(child_name_atom) do
-    associate_key_list =
-      associate_keyword_list
-      |> Enum.map(fn associate_keyword ->
-        {p, c} = associate_keyword
-        c
-      end)
-
-    group_by_list =
-      child_list
-      |> Enum.map(fn child -> Map.from_struct(child) end)
-      |> EnumLikeSqlUtil.group_by(associate_key_list)
-
-    parent_list
-    |> Enum.map(fn parent ->
-      parent_map = Map.from_struct(parent)
-
-      key_map =
-        associate_keyword_list
-        |> Enum.reduce(%{}, fn associate_keyword, acc ->
-          {p, c} = associate_keyword
-
-          acc
-          |> Map.put(c, parent_map[p])
-        end)
-
-      child_key_value =
-        group_by_list
-        |> Enum.find(fn group_by_key_value ->
-          {k, v} = group_by_key_value
-          k == key_map
-        end)
-
-      {k, v} = child_key_value
-
-      struct_v = module
-      |> struct(v)
-
-      parent
-      |> Map.put(child_name_atom, struct_v)
+    associate_key_list = associate_keyword_list
+    |> Enum.map(fn associate_keyword ->
+      {p, c} = associate_keyword
+      c
     end)
+
+    parens =
+    if length(child_list) > 0 do
+      child_module = Enum.at(child_list, 0).__struct__
+      child_struct = struct(child_module)
+
+      group_by_list =
+        child_list
+        |> Enum.map(fn child -> Map.from_struct(child) end)
+        |> EnumLikeSqlUtil.group_by(associate_key_list)
+
+      parent_list
+      |> Enum.map(fn parent ->
+        parent_map = Map.from_struct(parent)
+
+        key_map =
+          associate_keyword_list
+          |> Enum.reduce(%{}, fn associate_keyword, acc ->
+            {p, c} = associate_keyword
+
+            acc
+            |> Map.put(c, parent_map[p])
+          end)
+
+        child_key_value =
+          group_by_list
+          |> Enum.find(fn group_by_key_value ->
+            {k, v} = group_by_key_value
+            k == key_map
+          end)
+
+        parent
+        if child_key_value != nil do
+          {k, child_list} = child_key_value
+
+          struct_childs = child_list
+          |> Enum.map(fn(child)->
+            struct(child_struct, child)
+          end)
+
+          parent
+          |> Map.put(child_name_atom, struct_childs)
+        else
+          parent
+        end
+
+      end)
+    else
+      parent_list
+    end
+
 
   end
 
