@@ -80,33 +80,129 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   end
 
   defp build_query_by_params(query, params) do
-    #汎用検索向けなのでロックは取らない
-    or_list =
-        if params["or"] != nil do
+    # 汎用検索向けなのでロックは取らない
+    query =
+      cond do
+        params == nil ->
+          query
+
+        params["or"] != nil ->
           params["or"]
-        else
-          []
-        end
-    query = or_list
-    |> Enum.reduce(query, fn(param, query) ->
-        keys = Map.keys(param)
-        key = List.first(keys)
-        or_keyword = [{String.to_atom(key), Map.get(param, key)}]
-        or_where(query, ^or_keyword)
-    end)
-    and_list =
-    if  params["and"] != nil do
-      params["and"]
-      |> Enum.map(fn(param) ->
-        keys = Map.keys(param)
-        key = List.first(keys)
-     {String.to_atom(key), Map.get(param, key)}
-    end)
-    else
-      []
-    end
-    query = query
-    |> where(^and_list)
+          |> Enum.reduce(query, fn elem, query ->
+            key = hd(Map.keys(elem))
+            value = Map.get(elem, key)
+            key = String.to_atom(key)
+            or_keyword = [{key, value}]
+            or_where(query, ^or_keyword)
+          end)
+
+        true ->
+          query
+      end
+
+    query =
+      cond do
+        params == nil ->
+          query
+
+        params["paging"] != nil ->
+          page_value = params["paging"]["page"]
+          limit_value = params["paging"]["limit"]
+          offset_value = offset_calculation(page_value, limit_value)
+
+          query
+          |> limit(^limit_value)
+          |> offset(^offset_value)
+
+        true ->
+          query
+      end
+
+    query =
+      if params != nil do
+        params
+        |> Map.keys()
+        |> Enum.reduce(query, fn operator, query ->
+          if operator != "paging" do
+            params[operator]
+            |> Enum.reduce(query, fn elem, query ->
+              key = hd(Map.keys(elem))
+              value = Map.get(elem, key)
+              key = String.to_atom(key)
+
+              case operator do
+                "and" ->
+                  query
+                  |> where([s], field(s, ^key) == ^value)
+
+                "or" ->
+                  query
+
+                "not" ->
+                  query
+                  |> where([s], field(s, ^key) != ^value)
+
+                "in" ->
+                  query
+                  |> where([s], field(s, ^key) in ^value)
+
+                "greater" ->
+                  query
+                  |> where([s], field(s, ^key) > ^value)
+
+                "greater_equal" ->
+                  query
+                  |> where([s], field(s, ^key) >= ^value)
+
+                "less" ->
+                  query
+                  |> where([s], field(s, ^key) < ^value)
+
+                "less_equal" ->
+                  query
+                  |> where([s], field(s, ^key) <= ^value)
+
+                "order_by" ->
+                  case value do
+                    "asc" ->
+                      query
+                      |> order_by(asc: ^key)
+
+                    "desc" ->
+                      query
+                      |> order_by(desc: ^key)
+
+                    _ ->
+                      ""
+                  end
+
+                "like" ->
+                  query
+                  |> where([s], like(field(s, ^key), ^"%#{value}%"))
+
+                "forward_like" ->
+                  query
+                  |> where([s], like(field(s, ^key), ^"#{value}%"))
+
+                "backward_like" ->
+                  query
+                  |> where([s], like(field(s, ^key), ^"%#{value}"))
+
+                _ ->
+                  query
+              end
+            end)
+          else
+            query
+          end
+        end)
+      else
+        query
+      end
+  end
+
+  def offset_calculation(page_condition, limit_condition) do
+    offset_value = (page_condition - 1) * limit_condition
   end
 
   defp result_to_map_list(nil) do
@@ -198,43 +294,9 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   """
   def query_current_history(repo, schema, base_datetime, primary_keywords, condition_keywords) do
     query = schema
-    query = cond do
-      condition_keywords == nil ->
-        query
-      condition_keywords["or"] != nil ->
-        condition_keywords["or"]
-        |> Enum.reduce(
-             query,
-             fn (param, query) ->
-               keys = Map.keys(param)
-               key = List.first(keys)
-               or_keyword = [{String.to_atom(key), Map.get(param, key)}]
-               or_where(query, ^or_keyword)
-             end
-           )
-      true ->
-        query
-    end
-    query = cond do
-      condition_keywords == nil ->
-        query
-      condition_keywords["and"] != nil ->
-        and_condition = condition_keywords["and"]
-                        |> Enum.map(
-                             fn (param) ->
-                               keys = Map.keys(param)
-                               key = List.first(keys)
-                               {String.to_atom(key), Map.get(param, key)}
-                             end
-                           )
-        query
-        |> where(^and_condition)
-      true ->
-        query
-    end
-    query
-    |> where([s], s.start_datetime <= ^base_datetime and s.end_datetime >= ^base_datetime)
-    |> add_pk(primary_keywords)
+      |> build_query_by_params(condition_keywords)
+      |> where([s], s.start_datetime <= ^base_datetime and s.end_datetime >= ^base_datetime)
+      |> add_pk(primary_keywords)
   end
 
   @doc """
