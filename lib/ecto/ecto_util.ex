@@ -289,7 +289,7 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   ヒストリカルテーブル用のSelectエンドポイント用の汎用検索のQueryを返す
   """
   def query_current_history(repo, schema, base_datetime, primary_keywords, condition_keywords) do
-    query = schema
+    schema
       |> build_query_by_params(condition_keywords)
       |> where([s], s.start_datetime <= ^base_datetime and s.end_datetime >= ^base_datetime)
       |> add_pk(primary_keywords)
