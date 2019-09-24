@@ -124,79 +124,73 @@ defmodule MateriaUtils.Ecto.EctoUtil do
       if params != nil do
         params
         |> Map.keys()
+        |> Enum.reject(fn operator -> operator == "or" or operator == "paging" end)
         |> Enum.reduce(query, fn operator, query ->
-          if operator != "paging" do
-            params[operator]
-            |> Enum.reduce(query, fn elem, query ->
-              key = hd(Map.keys(elem))
-              value = Map.get(elem, key)
-              key = String.to_atom(key)
+          params[operator]
+          |> Enum.reduce(query, fn elem, query ->
+            key = hd(Map.keys(elem))
+            value = Map.get(elem, key)
+            key = String.to_atom(key)
 
-              case operator do
-                "and" ->
-                  query
-                  |> where([s], field(s, ^key) == ^value)
+            case operator do
+              "and" ->
+                query
+                |> where([s], field(s, ^key) == ^value)
 
-                "or" ->
-                  query
+              "not" ->
+                query
+                |> where([s], field(s, ^key) != ^value)
 
-                "not" ->
-                  query
-                  |> where([s], field(s, ^key) != ^value)
+              "in" ->
+                query
+                |> where([s], field(s, ^key) in ^value)
 
-                "in" ->
-                  query
-                  |> where([s], field(s, ^key) in ^value)
+              "greater" ->
+                query
+                |> where([s], field(s, ^key) > ^value)
 
-                "greater" ->
-                  query
-                  |> where([s], field(s, ^key) > ^value)
+              "greater_equal" ->
+                query
+                |> where([s], field(s, ^key) >= ^value)
 
-                "greater_equal" ->
-                  query
-                  |> where([s], field(s, ^key) >= ^value)
+              "less" ->
+                query
+                |> where([s], field(s, ^key) < ^value)
 
-                "less" ->
-                  query
-                  |> where([s], field(s, ^key) < ^value)
+              "less_equal" ->
+                query
+                |> where([s], field(s, ^key) <= ^value)
 
-                "less_equal" ->
-                  query
-                  |> where([s], field(s, ^key) <= ^value)
+              "order_by" ->
+                case value do
+                  "asc" ->
+                    query
+                    |> order_by(asc: ^key)
 
-                "order_by" ->
-                  case value do
-                    "asc" ->
-                      query
-                      |> order_by(asc: ^key)
+                  "desc" ->
+                    query
+                    |> order_by(desc: ^key)
 
-                    "desc" ->
-                      query
-                      |> order_by(desc: ^key)
+                  _ ->
+                    ""
+                end
 
-                    _ ->
-                      ""
-                  end
+              "like" ->
+                query
+                |> where([s], like(field(s, ^key), ^"%#{value}%"))
 
-                "like" ->
-                  query
-                  |> where([s], like(field(s, ^key), ^"%#{value}%"))
+              "forward_like" ->
+                query
+                |> where([s], like(field(s, ^key), ^"#{value}%"))
 
-                "forward_like" ->
-                  query
-                  |> where([s], like(field(s, ^key), ^"#{value}%"))
+              "backward_like" ->
+                query
+                |> where([s], like(field(s, ^key), ^"%#{value}"))
 
-                "backward_like" ->
-                  query
-                  |> where([s], like(field(s, ^key), ^"%#{value}"))
-
-                _ ->
-                  query
-              end
-            end)
-          else
-            query
-          end
+              _ ->
+                query
+            end
+          end)
         end)
       else
         query
