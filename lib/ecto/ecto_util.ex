@@ -177,15 +177,7 @@ defmodule MateriaUtils.Ecto.EctoUtil do
 
               "like" ->
                 query
-                |> where([s], like(field(s, ^key), ^"%#{value}%"))
-
-              "forward_like" ->
-                query
-                |> where([s], like(field(s, ^key), ^"#{value}%"))
-
-              "backward_like" ->
-                query
-                |> where([s], like(field(s, ^key), ^"%#{value}"))
+                |> where([s], like(field(s, ^key), ^"#{value}"))
 
               _ ->
                 query
