@@ -94,20 +94,17 @@ defmodule MateriaUtils.PagingUtil do
   def set_filter_equal(query, filter) do
     if PagingUtil.is_valid_check_filter_equal?(filter) do
       filter["equal"]
-      |> Enum.reduce(
-           query,
-           fn equal, acc ->
-             key =
-               equal
-               |> Map.keys()
-               |> List.first()
+      |> Enum.reduce(query, fn equal, acc ->
+        key =
+          equal
+          |> Map.keys()
+          |> List.first()
 
-             column = String.to_atom(key)
+        column = String.to_atom(key)
 
-             acc
-             |> where([q], field(q, ^column) == ^equal[key])
-           end
-         )
+        acc
+        |> where([q], field(q, ^column) == ^equal[key])
+      end)
     else
       query
     end
@@ -117,18 +114,15 @@ defmodule MateriaUtils.PagingUtil do
   def set_filter_between(query, filter) do
     if PagingUtil.is_valid_check_filter_between?(filter) do
       filter["between"]
-      |> Enum.reduce(
-           query,
-           fn between, acc ->
-             key =
-               between
-               |> Map.keys()
-               |> List.first()
+      |> Enum.reduce(query, fn between, acc ->
+        key =
+          between
+          |> Map.keys()
+          |> List.first()
 
-             acc
-             |> PagingUtil.set_filter_between_conditions(String.to_atom(key), Map.get(between, key))
-           end
-         )
+        acc
+        |> PagingUtil.set_filter_between_conditions(String.to_atom(key), Map.get(between, key))
+      end)
     else
       query
     end
@@ -138,20 +132,17 @@ defmodule MateriaUtils.PagingUtil do
   def set_filter_like(query, filter) do
     if PagingUtil.is_valid_check_filter_like?(filter) do
       filter["like"]
-      |> Enum.reduce(
-           query,
-           fn equal, acc ->
-             key =
-               equal
-               |> Map.keys()
-               |> List.first()
+      |> Enum.reduce(query, fn equal, acc ->
+        key =
+          equal
+          |> Map.keys()
+          |> List.first()
 
-             column = String.to_atom(key)
+        column = String.to_atom(key)
 
-             acc
-             |> where([q], like(field(q, ^column), ^"%#{equal[key]}%"))
-           end
-         )
+        acc
+        |> where([q], like(field(q, ^column), ^"%#{equal[key]}%"))
+      end)
     else
       query
     end

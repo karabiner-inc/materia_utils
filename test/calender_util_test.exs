@@ -14,7 +14,7 @@ defmodule MateriaUtils.CalendarUtilTest do
       list = [
         %{check_time: timex_parser("2018-11-21 00:00:01Z")},
         %{check_time: timex_parser("2018-11-21 00:00:00Z")},
-        %{check_time: timex_parser("2018-11-21 00:00:03Z")},
+        %{check_time: timex_parser("2018-11-21 00:00:03Z")}
       ]
 
       max_map = %{check_time: timex_parser("2018-11-21 00:00:03Z")}
@@ -39,7 +39,7 @@ defmodule MateriaUtils.CalendarUtilTest do
 
     test "only one element list" do
       list = [
-        %{check_time: timex_parser("2018-11-21 00:00:03Z")},
+        %{check_time: timex_parser("2018-11-21 00:00:03Z")}
       ]
 
       max_map = %{check_time: timex_parser("2018-11-21 00:00:03Z")}
@@ -48,5 +48,4 @@ defmodule MateriaUtils.CalendarUtilTest do
       assert result_map == max_map
     end
   end
-
 end

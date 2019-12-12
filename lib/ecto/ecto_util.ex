@@ -30,7 +30,8 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   """
   @spec query(Repo, string, [list]) :: [list]
   def query(repo, sql, params) do
-    Ecto.Adapters.SQL.query(repo, sql, params)
+    repo
+    |> Ecto.Adapters.SQL.query(sql, params)
     |> result_to_map_list()
   end
 
@@ -44,7 +45,7 @@ defmodule MateriaUtils.Ecto.EctoUtil do
 
   ## Examples
 
-　  POSTで以下のparamsが指定される想定
+  　  POSTで以下のparamsが指定される想定
     and もしくは orはマップのリストで指定する
     and もしくは orが必要ない場合は指定しなくてよい
 
@@ -63,22 +64,21 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   """
   @spec select_by_param(Repo, Ecto.Schema, [list]) :: [list]
   def select_by_param(repo, schema, params) do
-
     query = from(t in schema)
     query = build_query_by_params(query, params)
     repo.all(query)
-
   end
 
   @spec delete_by_param(Repo, Ecto.Schema, Atom, DateTime, [list]) :: [list]
   def delete_by_param(repo, schema, base_datetime_column, base_datetime, params) do
-
     query = from(t in schema)
-    query = query
-    |> where([t], field(t, ^base_datetime_column) <= ^base_datetime)
+
+    query =
+      query
+      |> where([t], field(t, ^base_datetime_column) <= ^base_datetime)
+
     query = build_query_by_params(query, params)
     repo.delete_all(query)
-
   end
 
   defp build_query_by_params(query, params) do
@@ -194,36 +194,39 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   end
 
   defp result_to_map_list(nil) do
-    #戻りが無いSQLの場合、nilで処理する
+    # 戻りが無いSQLの場合、nilで処理する
     nil
   end
+
   defp result_to_map_list({:error, error}) do
-    #エラーはスルー
+    # エラーはスルー
     {:error, error}
   end
 
   defp result_to_map_list({:ok, result}) do
-
     columns = result.columns
+
     case columns do
       nil ->
         [num_rows: result.num_rows]
+
       _ ->
         rows = result.rows
         list_maps = Enum.map(rows, fn row -> row_columns_to_map(row, columns) end)
     end
-
   end
 
   defp row_columns_to_map(row, columns) do
     map_result =
-      Enum.map(Enum.with_index(row, 0), fn {k, i} -> [Enum.at(columns, i), k] end)
+      row
+      |> Enum.with_index(0)
+      |> Enum.map(fn {k, i} -> [Enum.at(columns, i), k] end)
       |> Enum.map(fn [a, b] -> {String.to_atom(a), convert(b)} end)
       |> Map.new()
   end
 
   def convert({{year, month, day}, {hour, minites, sec, msec}}) do
-    #日時解釈できるものはDateTimeに変換
+    # 日時解釈できるものはDateTimeに変換
     Timex.to_datetime({{year, month, day}, {hour, minites, sec, msec}})
   end
 
@@ -249,7 +252,6 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   def list_current_history(repo, schema, base_datetime, keyword_list) do
     # 期間の検索条件付与
     list_current_history(repo, schema, base_datetime, keyword_list, nil)
-
   end
 
   @doc """
@@ -260,7 +262,8 @@ defmodule MateriaUtils.Ecto.EctoUtil do
 
   """
   def list_current_history(repo, schema, base_datetime, primary_keywords, condition_keywords) do
-    query_current_history(repo, schema, base_datetime, primary_keywords, condition_keywords)
+    repo
+    |> query_current_history(schema, base_datetime, primary_keywords, condition_keywords)
     |> lock("FOR UPDATE")
     |> repo.all()
   end
@@ -273,7 +276,8 @@ defmodule MateriaUtils.Ecto.EctoUtil do
 
   """
   def list_current_history_no_lock(repo, schema, base_datetime, primary_keywords, condition_keywords) do
-    query_current_history(repo, schema, base_datetime, primary_keywords, condition_keywords)
+    repo
+    |> query_current_history(schema, base_datetime, primary_keywords, condition_keywords)
     |> repo.all()
   end
 
@@ -282,9 +286,9 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   """
   def query_current_history(repo, schema, base_datetime, primary_keywords, condition_keywords) do
     schema
-      |> build_query_by_params(condition_keywords)
-      |> where([s], s.start_datetime <= ^base_datetime and s.end_datetime >= ^base_datetime)
-      |> add_pk(primary_keywords)
+    |> build_query_by_params(condition_keywords)
+    |> where([s], s.start_datetime <= ^base_datetime and s.end_datetime >= ^base_datetime)
+    |> add_pk(primary_keywords)
   end
 
   @doc """
@@ -305,11 +309,12 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   """
   @spec list_future_histories(Repo, Ecto.Schema, DateTime, [Keyword]) :: List
   def list_future_histories(repo, schema, base_datetime, keyword_list) do
-    sql = schema
-    |> where([s], s.start_datetime >= ^base_datetime)
-    |> add_pk(keyword_list)
-    |> lock("FOR UPDATE")
-    |> repo.all()
+    sql =
+      schema
+      |> where([s], s.start_datetime >= ^base_datetime)
+      |> add_pk(keyword_list)
+      |> lock("FOR UPDATE")
+      |> repo.all()
   end
 
   @doc """
@@ -330,10 +335,11 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   """
   @spec delete_future_histories(Repo, Ecto.Schema, DateTime, [Keyword]) :: {integer(), nil | [term()]}
   def delete_future_histories(repo, schema, base_datetime, keyword_list) do
-    sql = schema
-    |> where([s], s.start_datetime >= ^base_datetime)
-    |> add_pk(keyword_list)
-    |> repo.delete_all()
+    sql =
+      schema
+      |> where([s], s.start_datetime >= ^base_datetime)
+      |> add_pk(keyword_list)
+      |> repo.delete_all()
   end
 
   @doc """
@@ -353,11 +359,12 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   """
   @spec list_past_histories(Repo, Ecto.Schema, DateTime, [Keyword]) :: List
   def list_past_histories(repo, schema, base_datetime, keyword_list) do
-    sql = schema
-    |> where([s], s.start_datetime < ^base_datetime)
-    |> add_pk(keyword_list)
-    |> lock("FOR UPDATE")
-    |> repo.all()
+    sql =
+      schema
+      |> where([s], s.start_datetime < ^base_datetime)
+      |> add_pk(keyword_list)
+      |> lock("FOR UPDATE")
+      |> repo.all()
   end
 
   @doc """
@@ -365,14 +372,14 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   query2 = from(s in MateriaCommerce.Products.Item, join: s2 in subquery(query1))
   query2 = schema |> where(^[{:item_code, "ICZ1000"}])
   """
-  #@spec list_recent_history(Repo, Ecto.Schema, DateTime, [Keyword]) :: List
-  #def list_recent_history(repo, schema, base_datetime, keyword_list) do
+  # @spec list_recent_history(Repo, Ecto.Schema, DateTime, [Keyword]) :: List
+  # def list_recent_history(repo, schema, base_datetime, keyword_list) do
   #  sql = schema
   #  |> where([s], s.start_datetime > ^base_datetime)
   #  |> add_pk(keyword_list)
   #  |> lock("FOR UPDATE")
   #  |> repo.all()
-  #end
+  # end
 
   @doc """
   MateriaUtils.Ecto.EctoUtil.list_recent_history(MateriaCommerce.Test.Repo, MateriaCommerce.Products.Item, Timex.now(), [{:item_code, "ICZ1000"}])
@@ -380,30 +387,28 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   @spec list_recent_history(Repo, Ecto.Schema, DateTime, [Keyword]) :: List
   def list_recent_history(repo, schema, base_datetime, keyword_list) do
     table_name = Ecto.get_meta(struct(schema), :source)
-    select_string = keyword_list
-                    |> Enum.reduce(
-                         "",
-                         fn (keyword, acc) ->
-                           {k, v} = keyword
-                           if acc != "", do: "#{acc}, #{k}", else: "#{acc}#{k}"
-                         end
-                       )
-    and_string = keyword_list
-                 |> Enum.reduce(
-                      "",
-                      fn (keyword, acc) ->
-                        {k, v} = keyword
-                        if acc != "", do: "#{acc} and #{k} = '#{v}'", else: "#{acc}#{k} = '#{v}'"
-                      end
-                    )
-    join_on_string = keyword_list
-                     |> Enum.reduce(
-                          "",
-                          fn (keyword, acc) ->
-                            {k, v} = keyword
-                            "#{acc} and s1.#{k} = s2.#{k}"
-                          end
-                        )
+
+    select_string =
+      keyword_list
+      |> Enum.reduce("", fn keyword, acc ->
+        {k, v} = keyword
+        if acc != "", do: "#{acc}, #{k}", else: "#{acc}#{k}"
+      end)
+
+    and_string =
+      keyword_list
+      |> Enum.reduce("", fn keyword, acc ->
+        {k, v} = keyword
+        if acc != "", do: "#{acc} and #{k} = '#{v}'", else: "#{acc}#{k} = '#{v}'"
+      end)
+
+    join_on_string =
+      keyword_list
+      |> Enum.reduce("", fn keyword, acc ->
+        {k, v} = keyword
+        "#{acc} and s1.#{k} = s2.#{k}"
+      end)
+
     sql = "
       select
         *
@@ -435,11 +440,12 @@ defmodule MateriaUtils.Ecto.EctoUtil do
 
   def add_pk(sql, key_word_list) do
     # 主キーの検索条件付与
-    sql = [key_word_list]
-    |> Enum.reduce(sql, fn(key_word, acc) ->
-      acc
-      |> where(^key_word)
-    end)
+    sql =
+      [key_word_list]
+      |> Enum.reduce(sql, fn key_word, acc ->
+        acc
+        |> where(^key_word)
+      end)
   end
 
   @doc """
@@ -486,18 +492,17 @@ defmodule MateriaUtils.Ecto.EctoUtil do
 
   """
   def dynamic_join_on(keywords) do
-    _ = cond do
-      MateriaUtils.String.StringUtil.is_empty(keywords) -> raise ArgumentError, message: "keywords is empty."
-      true -> keywords
-              |> Enum.reduce(
-                   nil,
-                   fn (keyword, acc) ->
-                     cond do
-                       acc == nil -> dynamic([t0, t1], field(t0, ^keyword) == field(t1, ^keyword))
-                       true -> dynamic([t0, t1], field(t0, ^keyword) == field(t1, ^keyword) and ^acc)
-                     end
-                   end
-                 )
+    if MateriaUtils.String.StringUtil.is_empty(keywords) do
+      raise ArgumentError, message: "keywords is empty."
+    else
+      keywords
+      |> Enum.reduce(nil, fn keyword, acc ->
+        if is_nil(acc) do
+          dynamic([t0, t1], field(t0, ^keyword) == field(t1, ^keyword))
+        else
+          dynamic([t0, t1], field(t0, ^keyword) == field(t1, ^keyword) and ^acc)
+        end
+      end)
     end
   end
 
@@ -538,65 +543,63 @@ defmodule MateriaUtils.Ecto.EctoUtil do
   """
   @spec dynamic_preload(Atom, [Keyword], List, List, Atom) :: List
   def dynamic_preload(:has_many, associate_keyword_list, parent_list, child_list, child_name_atom)
-      when is_list(associate_keyword_list) and is_list(parent_list) and is_list(child_list) and
-             is_atom(child_name_atom) do
-    associate_key_list = associate_keyword_list
-    |> Enum.map(fn associate_keyword ->
-      {p, c} = associate_keyword
-      c
-    end)
+      when is_list(associate_keyword_list) and is_list(parent_list) and is_list(child_list) and is_atom(child_name_atom) do
+    associate_key_list =
+      associate_keyword_list
+      |> Enum.map(fn associate_keyword ->
+        {p, c} = associate_keyword
+        c
+      end)
 
     parens =
-    if length(child_list) > 0 do
-      child_module = Enum.at(child_list, 0).__struct__
-      child_struct = struct(child_module)
+      if length(child_list) > 0 do
+        child_module = Enum.at(child_list, 0).__struct__
+        child_struct = struct(child_module)
 
-      group_by_list =
-        child_list
-        |> Enum.map(fn child -> Map.from_struct(child) end)
-        |> EnumLikeSqlUtil.group_by(associate_key_list)
+        group_by_list =
+          child_list
+          |> Enum.map(fn child -> Map.from_struct(child) end)
+          |> EnumLikeSqlUtil.group_by(associate_key_list)
 
-      parent_list
-      |> Enum.map(fn parent ->
-        parent_map = Map.from_struct(parent)
+        parent_list
+        |> Enum.map(fn parent ->
+          parent_map = Map.from_struct(parent)
 
-        key_map =
-          associate_keyword_list
-          |> Enum.reduce(%{}, fn associate_keyword, acc ->
-            {p, c} = associate_keyword
+          key_map =
+            associate_keyword_list
+            |> Enum.reduce(%{}, fn associate_keyword, acc ->
+              {p, c} = associate_keyword
 
-            acc
-            |> Map.put(c, parent_map[p])
-          end)
+              acc
+              |> Map.put(c, parent_map[p])
+            end)
 
-        child_key_value =
-          group_by_list
-          |> Enum.find(fn group_by_key_value ->
-            {k, v} = group_by_key_value
-            k == key_map
-          end)
-
-        parent
-        if child_key_value != nil do
-          {k, child_list} = child_key_value
-
-          struct_childs = child_list
-          |> Enum.map(fn(child)->
-            struct(child_struct, child)
-          end)
+          child_key_value =
+            group_by_list
+            |> Enum.find(fn group_by_key_value ->
+              {k, v} = group_by_key_value
+              k == key_map
+            end)
 
           parent
-          |> Map.put(child_name_atom, struct_childs)
-        else
-          parent
-        end
 
-      end)
-    else
-      parent_list
-    end
+          if child_key_value != nil do
+            {k, child_list} = child_key_value
 
+            struct_childs =
+              child_list
+              |> Enum.map(fn child ->
+                struct(child_struct, child)
+              end)
 
+            parent
+            |> Map.put(child_name_atom, struct_childs)
+          else
+            parent
+          end
+        end)
+      else
+        parent_list
+      end
   end
-
 end

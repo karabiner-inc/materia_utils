@@ -56,34 +56,39 @@ defmodule MateriaUtils.Enum.SortUtil do
   """
   def sort_by_keywords(results, keywords) do
     results
-    |> Enum.sort(
-         fn current, next ->
-           current = cond do
-             Map.has_key?(current, :__struct__) -> Map.from_struct(current)
-             true -> current
-           end
-           next = cond do
-             Map.has_key?(next, :__struct__) -> Map.from_struct(next)
-             true -> next
-           end
-           is_sorted = keywords
-                       |> Enum.reduce(
-                            nil,
-                            fn keyword, acc ->
-                              _ = cond do
-                                is_nil(acc) ->
-                                  {key, sorter} = keyword
-                                  compare(current[key], next[key], sorter)
-                                true -> acc
-                              end
-                            end
-                          )
-           _ = cond do
-             is_nil(is_sorted) -> false
-             true -> is_sorted
-           end
-         end
-       )
+    |> Enum.sort(fn current, next ->
+      current =
+        cond do
+          Map.has_key?(current, :__struct__) -> Map.from_struct(current)
+          true -> current
+        end
+
+      next =
+        cond do
+          Map.has_key?(next, :__struct__) -> Map.from_struct(next)
+          true -> next
+        end
+
+      is_sorted =
+        keywords
+        |> Enum.reduce(nil, fn keyword, acc ->
+          _ =
+            cond do
+              is_nil(acc) ->
+                {key, sorter} = keyword
+                compare(current[key], next[key], sorter)
+
+              true ->
+                acc
+            end
+        end)
+
+      _ =
+        cond do
+          is_nil(is_sorted) -> false
+          true -> is_sorted
+        end
+    end)
   end
 
   @doc """
@@ -126,19 +131,33 @@ defmodule MateriaUtils.Enum.SortUtil do
 
   """
   def compare(current, next, sorter) do
-    _ = cond do
-      Timex.is_valid?(current) and Timex.is_valid?(next) ->
-        _ = cond do
-          Timex.compare(current, next) < 0 -> !(sorter == :desc)
-          Timex.compare(current, next) > 0 -> (sorter == :desc)
-          true -> nil
-        end
-      is_nil(current) and is_nil(next) -> nil
-      is_nil(current) -> !(sorter == :desc)
-      is_nil(next) -> (sorter == :desc)
-      current < next -> !(sorter == :desc)
-      current > next -> (sorter == :desc)
-      true -> nil
-    end
+    _ =
+      cond do
+        Timex.is_valid?(current) and Timex.is_valid?(next) ->
+          _ =
+            cond do
+              Timex.compare(current, next) < 0 -> !(sorter == :desc)
+              Timex.compare(current, next) > 0 -> sorter == :desc
+              true -> nil
+            end
+
+        is_nil(current) and is_nil(next) ->
+          nil
+
+        is_nil(current) ->
+          !(sorter == :desc)
+
+        is_nil(next) ->
+          sorter == :desc
+
+        current < next ->
+          !(sorter == :desc)
+
+        current > next ->
+          sorter == :desc
+
+        true ->
+          nil
+      end
   end
 end
