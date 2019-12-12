@@ -38,6 +38,7 @@ defmodule MateriaUtils.MixProject do
       {:ex_doc, "~> 0.18.0", only: :dev},
       #{:coverex, "~> 1.5"},
       {:excoveralls, "~> 0.10", only: :test},
+      {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
     ]
   end
 end

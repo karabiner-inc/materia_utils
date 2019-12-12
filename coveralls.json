@@ -1,5 +1,6 @@
 {
     "skip_files": [
-      "lib/ecto/ecto_util.ex"
+      "lib/ecto/ecto_util.ex",
+      "lib/paging/paging_util.ex"
     ]
   }
