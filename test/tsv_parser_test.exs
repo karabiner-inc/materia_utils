@@ -3,5 +3,4 @@ defmodule MateriaUtils.TsvParserTest do
   doctest MateriaUtils.Test.TsvParser
 
   alias MateriaUtils.Test.TsvParser
-
 end

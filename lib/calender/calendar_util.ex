@@ -77,7 +77,6 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
       {:ok, base_datetime} = Timex.parse(test_base_datetime, "{ISO:Extended}")
       base_datetime
     end
-
   end
 
   @doc """
@@ -86,10 +85,12 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
   """
   @spec ecto_datetime_now() :: Ecto.DateTime
   def ecto_datetime_now() do
-    {:ok, now_datetime } = now()
-    |> convert_time_utc2local()
-    |> Timex.format!("%FT%T", :strftime)
-    |> Ecto.DateTime.cast()
+    {:ok, now_datetime} =
+      now()
+      |> convert_time_utc2local()
+      |> Timex.format!("%FT%T", :strftime)
+      |> Ecto.DateTime.cast()
+
     now_datetime
   end
 
@@ -154,19 +155,21 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
   """
   @spec convert_time_local2utc(Map, List) :: Map
   def convert_time_local2utc(attr, key_list) when is_map(attr) and is_list(key_list) do
-    converted_attr = key_list
-    |> Enum.reduce(attr, fn(key, attr) ->
+    converted_attr =
+      key_list
+      |> Enum.reduce(attr, fn key, attr ->
         value = Map.get(attr, key)
+
         attr =
-        if Map.has_key?(attr, key) and value != nil do
-          Map.put(attr, key, Timex.Timezone.convert(value, "Etc/UTC"))
-        else
-          attr
-        end
-    end)
+          if Map.has_key?(attr, key) and value != nil do
+            Map.put(attr, key, Timex.Timezone.convert(value, "Etc/UTC"))
+          else
+            attr
+          end
+      end)
+
     converted_attr
   end
-
 
   @doc false
   def convert_time_string_utc2local(nil) do
@@ -254,7 +257,8 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
   def get_local_begining_of_day(utc_datetime) do
     local_timezone_name = Application.get_env(:materia_utils, :calender_locale)
 
-    Timex.Timezone.convert(utc_datetime, local_timezone_name)
+    utc_datetime
+    |> Timex.Timezone.convert(local_timezone_name)
     |> Timex.beginning_of_day()
     |> Timex.Timezone.convert(@time_zone_utc)
   end
@@ -326,20 +330,23 @@ defmodule MateriaUtils.Calendar.CalendarUtil do
 
   """
   def parse_datetime_strftime(attr, key_list) when is_map(attr) and is_list(key_list) do
-    converted_attr = key_list
-    |> Enum.reduce(attr, fn(key, attr) ->
+    converted_attr =
+      key_list
+      |> Enum.reduce(attr, fn key, attr ->
         value = Map.get(attr, key)
+
         attr =
-        if Map.has_key?(attr, key) and value != nil do
-          with {:ok, date_time} <- Timex.parse(value, "{ISO:Extended:Z}") do
-            Map.put(attr, key, date_time)
+          if Map.has_key?(attr, key) and value != nil do
+            with {:ok, date_time} <- Timex.parse(value, "{ISO:Extended:Z}") do
+              Map.put(attr, key, date_time)
+            else
+              _ -> attr
+            end
           else
-            _ -> attr
+            attr
           end
-        else
-          attr
-        end
-    end)
+      end)
+
     converted_attr
   end
 end
