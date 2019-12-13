@@ -7,7 +7,7 @@ defmodule MateriaUtils.MixProject do
       version: "0.1.1",
       elixir: "~> 1.6",
       test_coverage: [tool: ExCoveralls, ignore_modules: [MateriaUtils.Ecto.EctoUtil]],
-      preferred_cli_env: ["coveralls": :test, "coveralls.detail": :test, "coveralls.post": :test, "coveralls.html": :test],
+      preferred_cli_env: [coveralls: :test, "coveralls.detail": :test, "coveralls.post": :test, "coveralls.html": :test],
       description: "This library is a utilities for service development based on Materia.",
       start_permanent: Mix.env() == :prod,
       package: [
@@ -36,9 +36,9 @@ defmodule MateriaUtils.MixProject do
       {:timex, "~> 3.3"},
       {:mojiex, "~> 0.1.0"},
       {:ex_doc, "~> 0.18.0", only: :dev},
-      #{:coverex, "~> 1.5"},
+      # {:coverex, "~> 1.5"},
       {:excoveralls, "~> 0.10", only: :test},
-      {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false}
     ]
   end
 end

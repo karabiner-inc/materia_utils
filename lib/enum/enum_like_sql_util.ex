@@ -165,5 +165,4 @@ defmodule MateriaUtils.Enum.EnumLikeSqlUtil do
         {group_by_keys_map, count_map}
       end)
   end
-
 end

@@ -1,5 +1,5 @@
 defmodule MateriaUtils.String.StringUtil do
-
+  @moduledoc false
   @doc """
 
   normalize labels
@@ -32,13 +32,13 @@ defmodule MateriaUtils.String.StringUtil do
   false
   """
   def is_empty(value) do
-    _ = cond do
-      is_nil(value) -> true
-      value == "" -> true
-      value == [] -> true
-      value == %{} -> true
-      true -> false
-    end
+    _ =
+      cond do
+        is_nil(value) -> true
+        value == "" -> true
+        value == [] -> true
+        value == %{} -> true
+        true -> false
+      end
   end
-
 end
